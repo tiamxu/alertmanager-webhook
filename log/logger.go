@@ -9,16 +9,6 @@ import (
 
 var _defaultLogger = logrus.New()
 
-// const defaultTimestampFormat = time.RFC3339
-
-type Formatter struct {
-	TimestampFormat string
-}
-
-// func (f *Formatter) Format(entry *logrus.Logger) ([]byte, error) {
-
-// }
-
 func DefaultLogger() *logrus.Logger {
 	return _defaultLogger
 }
@@ -28,7 +18,7 @@ func init() {
 	})
 	_defaultLogger.SetOutput(os.Stdout)
 	_defaultLogger.SetLevel(logrus.TraceLevel)
-	_defaultLogger.SetReportCaller(true)
+	// _defaultLogger.SetReportCaller(true)
 }
 
 type Fields = logrus.Fields

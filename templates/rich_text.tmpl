@@ -1,0 +1,81 @@
+{
+  "msg_type": "interactive",
+  "card": {
+    "elements": [
+      {{ range .Alerts }}
+      {
+        "tag": "div",
+        "text": {
+          "content": "#### 告警通知\n\n状态: {{ .Status }}\n\n开始时间: {{ .StartsAt.Format "2006-01-02 15:04:05" }}\n\n{{ if ne .EndsAt.IsZero }}结束时间: {{ .EndsAt.Format "2006-01-02 15:04:05" }}\n\n{{ end }}",
+          "type": "plain_text"
+        }
+      },
+      {
+        "tag": "hr"
+      },
+      {
+        "tag": "div",
+        "fields": [
+          {
+            "is_short": true,
+            "text": {
+              "content": "**标签**",
+              "type": "lark_md"
+            }
+          },
+          {
+            "is_short": true,
+            "text": {
+              "content": "{{ range $key, $value := .Labels }}- **{{$key}}:** {{$value}}\n{{ end }}",
+              "type": "lark_md"
+            }
+          }
+        ]
+      },
+      {
+        "tag": "div",
+        "fields": [
+          {
+            "is_short": true,
+            "text": {
+              "content": "**注解**",
+              "type": "lark_md"
+            }
+          },
+          {
+            "is_short": true,
+            "text": {
+              "content": "{{ range $key, $value := .Annotations }}- **{{$key}}:** {{$value}}\n{{ end }}",
+              "type": "lark_md"
+            }
+          }
+        ]
+      },
+      {
+        "tag": "hr"
+      },
+      {
+        "tag": "action",
+        "actions": [
+          {
+            "tag": "button",
+            "text": {
+              "content": "查看告警详情",
+              "type": "plain_text"
+            },
+            "type": "primary",
+            "url": "{{.GeneratorURL}}"
+          }
+        ]
+      }
+      {{ if not last }}{{ "," }}{{ end }} {{/* Add a comma between elements */}}
+      {{ end }}
+    ],
+    "header": {
+      "title": {
+        "content": "Prometheus Alert",
+        "tag": "plain_text"
+      }
+    }
+  }
+}

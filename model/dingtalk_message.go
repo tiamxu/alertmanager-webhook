@@ -16,20 +16,3 @@ type DDMessage struct {
 	Markdown Md     `json:"markdown"`
 	At       At     `json:"at"`
 }
-
-// {
-// 	"msgtype": "markdown",
-// 	"markdown": {
-// 		"title":"Prometheus告警信息",
-// 		"text": "#### 监控指标\n" +
-// 				"> 监控描述信息\n\n" +
-// 				"> ###### 告警时间 \n"
-// 	},
-//    "at": {
-// 	   "atMobiles": [
-// 		   "156xxxx8827",
-// 		   "189xxxx8325"
-// 	   ],
-// 	   "isAtAll": false
-//    }
-// }

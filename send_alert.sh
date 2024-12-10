@@ -124,4 +124,4 @@ alerts_message='
 }
 '
 
-curl -XPOST -d"$alerts_message" http://localhost:8800/feishu
+curl -XPOST -d"$alerts_message" "http://localhost:8800/webhook?type=fs&tpl=feishu&fsurl=https://open.feishu.cn/open-apis/bot/v2/hook/bf8bb912-bc2e-40ad-9533-fcb8068aa621"
