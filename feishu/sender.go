@@ -16,6 +16,7 @@ type FeiShuSender struct {
 	WebhookURL string
 }
 
+// 富文本
 func (f *FeiShuSender) SendToText(message *model.CommonMessage) error {
 	if message.Platform != "feishu" {
 		return fmt.Errorf("invalid platform for FeiShuSender")
@@ -61,8 +62,11 @@ func (f *FeiShuSender) Send(message *model.CommonMessage) error {
 	var msg interface{}
 	elements := model.InteractiveMessageCardElements{
 		{
-			Tag:     "markdown",
-			Content: message.Text,
+			Tag: "div",
+			Text: model.InteractiveMessageCardElementsText{
+				Tag:     "plain_text",
+				Content: message.Text,
+			},
 			// Content: "# 一级标题\n## 二级标题\n### 三级标题\n#### 四级标题\n##### 五级标题\n###### 六级标题",
 		},
 		{
@@ -72,9 +76,11 @@ func (f *FeiShuSender) Send(message *model.CommonMessage) error {
 
 	headers := model.InteractiveMessageCardHeader{
 		Title: model.InteractiveMessageCardHeaderTitle{
-			Content: "测试告警",
+			Content: message.Title,
 			Tag:     "plain_text",
 		},
+		// 标题主题颜色。支持 "blue"|"wathet"|"tuiquoise"|"green"|"yellow"|"orange"|"red"|"carmine"|"violet"|"purple"|"indigo"|"grey"|"default"。默认值 default。
+		Template: "red",
 	}
 	msg = model.NewInteractiveMessage(elements, headers)
 	payload, err := json.Marshal(msg)

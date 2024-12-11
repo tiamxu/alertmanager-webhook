@@ -1,5 +1,7 @@
-http://localhost:8800/webhook?type=fs&tpl=&fsurl=https://open.feishu.cn/open-apis/bot/v2/hook/bf8bb912-bc2e-40ad-9533-fcb8068aa621
-
+## 测试
+```
+http://localhost:8800/webhook?type=fs&tpl=feishu&fsurl=https://open.feishu.cn/open-apis/bot/v2/hook/bf8bb912-bc2e-40ad-9533-fcb8068aa621
+```
 
 ```
 {

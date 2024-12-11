@@ -87,29 +87,30 @@ func NewPostMessage(title string, content [][]PostMessageContentPostZhCnContent)
 	}
 }
 
-// InteractiveMessage 消息卡片
+// InteractiveMessage v2版本消息卡片
 type InteractiveMessage struct {
 	MsgType MsgType                `json:"msg_type"`
 	Card    InteractiveMessageCard `json:"card"`
 }
 
 type InteractiveMessageCard struct {
-	Schema string                       `json:"schema,omitempty"`
-	Body   InteractiveMessageCardBody   `json:"body,omitempty"`
-	Header InteractiveMessageCardHeader `json:"header,omitempty"`
+	Schema string `json:"schema,omitempty"`
+	// Body   InteractiveMessageCardBody   `json:"body,omitempty"`
+	Elements InteractiveMessageCardElements `json:"elements"`
+	Header   InteractiveMessageCardHeader   `json:"header,omitempty"`
 }
 type InteractiveMessageCardBody struct {
 	Elements InteractiveMessageCardElements `json:"elements"`
 }
 type InteractiveMessageCardElements []struct {
-	Tag     string `json:"tag"`
-	Content string `json:"content,omitempty"`
+	Tag  string                             `json:"tag"`
+	Text InteractiveMessageCardElementsText `json:"text"`
 	// Actions InteractiveMessageCardElementsActions `json:"actions,omitempty"`
 }
 
 type InteractiveMessageCardElementsText struct {
 	Content string `json:"content"`
-	Tag     string `json:"tag,omitempty"`
+	Tag     string `json:"tag"`
 }
 
 type InteractiveMessageCardElementsActions []struct {
@@ -126,7 +127,8 @@ type InteractiveMessageCardElementsActionsText struct {
 }
 
 type InteractiveMessageCardHeader struct {
-	Title InteractiveMessageCardHeaderTitle `json:"title"`
+	Title    InteractiveMessageCardHeaderTitle `json:"title"`
+	Template string                            `json:"template,omitempty"`
 }
 type InteractiveMessageCardHeaderTitle struct {
 	Content string `json:"content"`
@@ -139,10 +141,11 @@ func NewInteractiveMessage(elements InteractiveMessageCardElements, header Inter
 	return &InteractiveMessage{
 		MsgType: MsgTypeInteractive,
 		Card: InteractiveMessageCard{
-			Schema: "2.0",
-			Body: InteractiveMessageCardBody{
-				Elements: elements,
-			},
+			Schema:   "1.0",
+			Elements: elements,
+			// Body: InteractiveMessageCardBody{
+			// 	Elements: elements,
+			// },
 			Header: header,
 		},
 	}

@@ -32,7 +32,7 @@ db:
   driver: mysql
   database: jenkins
   username: root
-  password: Unipal666
+  password: 123456
   host: 172.168.1.10
   port: 3306
   max_idle_conns: 5

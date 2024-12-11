@@ -1,19 +1,17 @@
-{{ $var := .ExternalURL }}
-{{ range $k, $v := .Alerts }}
-{{ if eq $v.Status "resolved" }}
-## [恢复]
-#### [{{$v.Labels.alertname}}]
-###### 开始时间：{{ $v.StartsAt.Format "2006-01-02 15:04:05" }}
-###### 结束时间：{{ $v.EndsAt.Format "2006-01-02 15:04:05" }}
-###### 故障主机IP：{{$v.Labels.instance}}
-##### {{$v.Annotations.description}}
-{{ else }}
-### [故障]
-#### [{{$v.Labels.alertname}}]
-##### 告警级别：{{$v.Labels.level}}
-##### 开始时间：{{ $v.StartsAt.Format "2006-01-02 15:04:05" }}
-##### 结束时间：{{ $v.EndsAt.Format "2006-01-02 15:04:05" }}
-##### 故障主机IP：{{$v.Labels.instance}}
-##### {{$v.Annotations.description}}
+{{ $var := .ExternalURL -}}
+{{ range $k, $v := .Alerts -}}
+{{ if eq $v.Status "resolved" -}}
+[恢复]
+开始时间：{{ $v.StartsAt.Format "2006-01-02 15:04:05" }}
+结束时间：{{ $v.EndsAt.Format "2006-01-02 15:04:05" }}
+故障主机IP：{{$v.Labels.instance}}
+{{$v.Annotations.description}}
+{{else -}}
+[故障]
+告警级别：{{$v.Labels.level}}
+开始时间：{{ $v.StartsAt.Format "2006-01-02 15:04:05" }}
+结束时间：{{ $v.EndsAt.Format "2006-01-02 15:04:05" }}
+故障主机IP：{{$v.Labels.instance}}
+{{$v.Annotations.description}}
 {{ end }}
-{{ end }}
+{{ end -}}

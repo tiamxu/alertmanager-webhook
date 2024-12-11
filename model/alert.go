@@ -23,6 +23,7 @@ type AlertMessage struct {
 	CommonAnnotations map[string]string `json:"commonAnnotations"`
 	ExternalURL       string            `json:"externalURL"`
 	Alerts            []Alert           `json:"alerts"`
+	TruncatedAlerts   int               `json:"truncatedAlerts"`
 	Template          *Template
 }
 

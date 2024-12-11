@@ -19,6 +19,8 @@ func HandlerWebhook(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	log.Printf("AlertMessage content %+v", notification)
+
 	webhookType := c.Query("type")
 	templateName := c.Query("tpl")
 	fsURL := c.Query("fsurl")
@@ -44,7 +46,6 @@ func HandlerWebhook(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "template execution failed"})
 		return
 	}
-
 	parsedURL, err := url.Parse(fsURL)
 	if err != nil {
 		log.Errorf("Failed to parse FeiShu webhook URL: %v", err)
@@ -57,8 +58,8 @@ func HandlerWebhook(c *gin.Context) {
 
 	commonMsg := &model.CommonMessage{
 		Platform: config.AppConfig.AlertType,
-		// Title:    notification.GroupLabels["alertname"],
-		Text: messageContent,
+		Title:    notification.GroupLabels["alertname"],
+		Text:     messageContent,
 	}
 
 	sender := &feishu.FeiShuSender{
