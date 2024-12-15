@@ -60,12 +60,15 @@ func PrometheusAlert(c *gin.Context) {
 	// 构建和发送消息
 	if split != "false" {
 		for _, alert := range notification.Alerts {
-			singleAlertMsg := model.AlertMessage{
-				Alerts: []model.Alert{alert},
-			}
-			sendAlertMessage(c, parsedURL.String(), level, color, status, atSomeOne, alert.Labels["alertname"], singleAlertMsg, alertTemplate)
+			// singleAlertMsg := notification
+			notification.Alerts = []model.Alert{alert}
+			log.Printf("AlertMessage content %+v", notification)
+
+			sendAlertMessage(c, parsedURL.String(), level, color, status, atSomeOne, alert.Labels["alertname"], notification, alertTemplate)
 		}
 	} else {
+		log.Printf("AlertMessage content %+v", notification)
+
 		sendAlertMessage(c, parsedURL.String(), level, color, status, atSomeOne, notification.GroupLabels["alertname"], notification, alertTemplate)
 	}
 
