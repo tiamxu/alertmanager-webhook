@@ -237,3 +237,7 @@ func (f *FeiShuSender) SendV2(message *model.CommonMessage) error {
 	return nil
 
 }
+
+func (f *FeiShuSender) NewFeiShuSender() {
+	return 
+}

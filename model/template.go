@@ -65,7 +65,7 @@ func NewTemplate(filename string) (*Template, error) {
 }
 
 func (t *Template) Execute(data interface{}) (string, error) {
-	log.Infof("Template data: %+v", data)
+	// log.Infof("Template data: %+v", data)
 	var buf bytes.Buffer
 	err := t.tmpl.Execute(&buf, data)
 	if err != nil {

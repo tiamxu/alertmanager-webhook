@@ -17,9 +17,8 @@ import (
 
 func PrometheusAlert(c *gin.Context) {
 	var notification model.AlertMessage
-	err := c.BindJSON(&notification)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if err := c.BindJSON(&notification); err != nil {
+		handleError(c, http.StatusBadRequest, "failed to parse JSON", err)
 		return
 	}
 	// log.Printf("AlertMessage content %+v", notification)
@@ -27,83 +26,47 @@ func PrometheusAlert(c *gin.Context) {
 	webhookType := c.Query("type")
 	templateName := c.Query("tpl")
 	fsURL := c.Query("fsurl")
+	atSomeOne := c.Query("at")
+	split := c.Query("split")
+
 	if webhookType != "fs" || templateName == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or missing parameters"})
+		handleError(c, http.StatusBadRequest, "invalid or missing parameters", fmt.Errorf("接口参数异常"))
 		return
 	}
-	//转告警级别为中文
-	AlertLevel := notification.ConvertLevelToInt()
 
-	SendContent, err := json.Marshal(notification)
-	if err != nil {
-		log.Fatalf("Error marshalling JSON: %v", err)
-	}
-	// // templateName := notification.GetTemplateName()
-	var color, status string
-	if strings.Count(string(SendContent), "resolved") > 0 && strings.Count(string(SendContent), "firing") > 0 {
-		color = "orange"
-	} else if strings.Count(string(SendContent), "resolved") > 0 {
-		color = "green"
-	} else {
-		color = "red"
-	}
-	if notification.Status == "resolved" {
-		status = "恢复"
-	} else {
-		status = "故障"
+	// 转告警级别为中文并设置消息颜色和状态
+	level := notification.ConvertLevelToInt()
+	color, status := getAlertColorAndStatus(notification)
 
-	}
+	// templateName := notification.GetTemplateName()
+	//加载模版文件
 	templateFile := filepath.Join("templates", templateName+".tmpl")
 	alertTemplate, err := model.NewTemplate(templateFile)
 	if err != nil {
-		log.Errorf("Failed to load template file: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "template loading failed"})
+		handleError(c, http.StatusInternalServerError, "template loading failed", err)
 		return
 	}
-
-	// for i := range notification.Alerts {
-	// 	notification.Alerts[i].Annotations["text"] = messageContent
-	// }
 	notification.SetTemplate(alertTemplate)
-	messageContent, err := notification.Template.Execute(notification)
-	fmt.Printf("messageContent:%s\n", messageContent)
+	// fmt.Printf("messageContent:%s\n", messageContent)
 	// messageContext, err := alertTemplate.Execute(notification)
-	if err != nil {
-		log.Errorf("Failed to execute template: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "template execution failed"})
-		return
-	}
+
+	// 解析 FeiShu webhook URL
 	parsedURL, err := url.Parse(fsURL)
 	if err != nil {
-		log.Errorf("Failed to parse FeiShu webhook URL: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid fsurl parameter"})
+		handleError(c, http.StatusBadRequest, "invalid fsurl parameter", err)
 		return
 	}
 
-	commonMsg := &model.CommonMessage{
-		Platform: config.AppConfig.AlertType,
-		Title:    notification.GroupLabels["alertname"],
-		Text:     messageContent,
-		Level:    AlertLevel,
-		Color:    color,
-		Status:   status,
-	}
-
-	sender := &feishu.FeiShuSender{
-		WebhookURL: parsedURL.String(),
-	}
-	// sender := getSender(commonMsg)
-	//fmt.Println(msg)
-	// if sender == nil {
-	// 	c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported platform"})
-	// 	log.Infof("getSender:%s", err)
-	// 	return
-	// }
-
-	err = sender.SendV2(commonMsg)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	// 构建和发送消息
+	if split != "false" {
+		for _, alert := range notification.Alerts {
+			singleAlertMsg := model.AlertMessage{
+				Alerts: []model.Alert{alert},
+			}
+			sendAlertMessage(c, parsedURL.String(), level, color, status, atSomeOne, alert.Labels["alertname"], singleAlertMsg, alertTemplate)
+		}
+	} else {
+		sendAlertMessage(c, parsedURL.String(), level, color, status, atSomeOne, notification.GroupLabels["alertname"], notification, alertTemplate)
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "successful send alert notification!"})
@@ -124,16 +87,6 @@ func PrometheusAlert(c *gin.Context) {
 // 		log.Warnf("Unsupported platform specified: %s", notification.Platform)
 // 	}
 // 	return nil
-// }
-
-// func buildMessageText(notification model.AlertMessage) string {
-// 	var buffer strings.Builder
-// 	buffer.WriteString(fmt.Sprintf("通知组%s,状态[%s]\n告警项\n\n", notification.GroupKey, notification.Status))
-// 	for _, alert := range notification.Alerts {
-// 		buffer.WriteString(fmt.Sprintf("摘要：%s\n详情: %s\n", alert.Annotations["summary"], alert.Annotations["description"]))
-// 		buffer.WriteString(fmt.Sprintf("开始时间: %s\n\n", alert.StartsAt.Format("2023-12-01 15:04:05")))
-// 	}
-// 	return buffer.String()
 // }
 
 func SendMessageR(message model.AlertMessage, platform, fsurl, phone, email string) {
@@ -160,4 +113,52 @@ func SendMessageR(message model.AlertMessage, platform, fsurl, phone, email stri
 		}
 	}
 
+}
+
+// 构建消息内容
+func sendAlertMessage(c *gin.Context, fsurl, level, color, status, atSomeOne, title string, message interface{}, tmpl *model.Template) {
+	messageContent, err := tmpl.Execute(message)
+	if err != nil {
+		handleError(c, http.StatusInternalServerError, "template execution failed", err)
+		return
+	}
+
+	commonMsg := &model.CommonMessage{
+		Platform:  config.AppConfig.AlertType,
+		Title:     title,
+		Text:      messageContent,
+		Level:     level,
+		Color:     color,
+		Status:    status,
+		AtSomeOne: atSomeOne,
+	}
+
+	sender := &feishu.FeiShuSender{
+		WebhookURL: fsurl,
+	}
+	if err := sender.SendV2(commonMsg); err != nil {
+		handleError(c, http.StatusInternalServerError, "message sending failed", err)
+	}
+}
+
+func getAlertColorAndStatus(notification model.AlertMessage) (string, string) {
+	content, err := json.Marshal(notification)
+	if err != nil {
+		log.Errorf("getAlertColorAndStatus Error marshalling JSON: %v", err)
+		return "red", "故障" // 默认返回红色和“故障”状态
+	}
+	contentStr := strings.ToLower(string(content))
+	switch {
+	case strings.Contains(contentStr, "resolved") && strings.Contains(contentStr, "firing"):
+		return "orange", "故障"
+	case strings.Contains(contentStr, "resolved"):
+		return "green", "恢复"
+	default:
+		return "red", "故障"
+	}
+}
+
+func handleError(c *gin.Context, statusCode int, message string, err error) {
+	log.Errorf("Error %s: %v", message, err)
+	c.JSON(statusCode, gin.H{"error": fmt.Sprintf("%s: %v", message, err)})
 }
