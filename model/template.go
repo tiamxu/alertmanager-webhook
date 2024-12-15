@@ -11,7 +11,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/tiamxu/kit/log"
+	"github.com/tiamxu/alertmanager-webhook/log"
 )
 
 type Template struct {
@@ -24,23 +24,6 @@ func NewTemplate(filename string) (*Template, error) {
 	if err != nil {
 		return nil, err
 	}
-	tmpl, err := template.New("alert").Parse(string(data))
-	if err != nil {
-		return nil, err
-	}
-	return &Template{tmpl: tmpl}, nil
-}
-
-func (t *Template) Execute(data interface{}) (string, error) {
-	var buf bytes.Buffer
-	err := t.tmpl.Execute(&buf, data)
-	if err != nil {
-		return "", err
-	}
-	return buf.String(), nil
-}
-
-func TransformAlertMessage(p_json interface{}, tpltext string) (error error, msg string) {
 	funcMap := template.FuncMap{
 		"GetTimeDuration": GetTimeDuration,
 		"GetCSTtime":      GetCSTtime,
@@ -73,19 +56,21 @@ func TransformAlertMessage(p_json interface{}, tpltext string) (error error, msg
 			return pstring[start:stop]
 		},
 	}
-
-	buf := new(bytes.Buffer)
-	tpl, err := template.New("").Funcs(funcMap).Parse(tpltext)
+	tmpl, err := template.New("").Funcs(funcMap).Parse(string(data))
+	// tmpl, err := template.New("alert").Parse(string(data))
 	if err != nil {
-		return err, ""
+		return nil, err
 	}
+	return &Template{tmpl: tmpl}, nil
+}
 
-	err = tpl.Execute(buf, p_json)
+func (t *Template) Execute(data interface{}) (string, error) {
+	var buf bytes.Buffer
+	err := t.tmpl.Execute(&buf, data)
 	if err != nil {
-		return err, ""
+		return "", err
 	}
-
-	return nil, buf.String()
+	return buf.String(), nil
 }
 
 // 转换时间戳到时间字符串

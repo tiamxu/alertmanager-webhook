@@ -1,9 +1,12 @@
-package controllers
+package api
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"path/filepath"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/tiamxu/alertmanager-webhook/config"
@@ -12,14 +15,14 @@ import (
 	"github.com/tiamxu/alertmanager-webhook/model"
 )
 
-func HandlerWebhook(c *gin.Context) {
+func PrometheusAlert(c *gin.Context) {
 	var notification model.AlertMessage
 	err := c.BindJSON(&notification)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	log.Printf("AlertMessage content %+v", notification)
+	// log.Printf("AlertMessage content %+v", notification)
 
 	webhookType := c.Query("type")
 	templateName := c.Query("tpl")
@@ -28,8 +31,30 @@ func HandlerWebhook(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or missing parameters"})
 		return
 	}
+	//转告警级别为中文
+	AlertLevel := notification.ConvertLevelToInt()
+	if notification.Status == "" {
 
+	}
+	SendContent, err := json.Marshal(notification)
+	if err != nil {
+		log.Fatalf("Error marshalling JSON: %v", err)
+	}
 	// // templateName := notification.GetTemplateName()
+	var color, status string
+	if strings.Count(string(SendContent), "resolved") > 0 && strings.Count(string(SendContent), "firing") > 0 {
+		color = "orange"
+	} else if strings.Count(string(SendContent), "resolved") > 0 {
+		color = "green"
+	} else {
+		color = "red"
+	}
+	if notification.Status == "resolved" {
+		status = "恢复"
+	} else {
+		status = "故障"
+
+	}
 	templateFile := filepath.Join("templates", templateName+".tmpl")
 	alertTemplate, err := model.NewTemplate(templateFile)
 	if err != nil {
@@ -37,9 +62,13 @@ func HandlerWebhook(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "template loading failed"})
 		return
 	}
+
+	// for i := range notification.Alerts {
+	// 	notification.Alerts[i].Annotations["text"] = messageContent
+	// }
 	notification.SetTemplate(alertTemplate)
 	messageContent, err := notification.Template.Execute(notification)
-	// fmt.Printf("messageContent:%s\n", messageContent)
+	fmt.Printf("messageContent:%s\n", messageContent)
 	// messageContext, err := alertTemplate.Execute(notification)
 	if err != nil {
 		log.Errorf("Failed to execute template: %v", err)
@@ -52,18 +81,17 @@ func HandlerWebhook(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid fsurl parameter"})
 		return
 	}
-	// for i := range notification.Alerts {
-	// 	notification.Alerts[i].Annotations["text"] = messageContent
-	// }
 
 	commonMsg := &model.CommonMessage{
 		Platform: config.AppConfig.AlertType,
 		Title:    notification.GroupLabels["alertname"],
 		Text:     messageContent,
+		Level:    AlertLevel,
+		Color:    color,
+		Status:   status,
 	}
 
 	sender := &feishu.FeiShuSender{
-		Name:       "robot1",
 		WebhookURL: parsedURL.String(),
 	}
 	// sender := getSender(commonMsg)
@@ -74,7 +102,7 @@ func HandlerWebhook(c *gin.Context) {
 	// 	return
 	// }
 
-	err = sender.Send(commonMsg)
+	err = sender.SendV2(commonMsg)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -109,3 +137,29 @@ func HandlerWebhook(c *gin.Context) {
 // 	}
 // 	return buffer.String()
 // }
+
+func SendMessageR(message model.AlertMessage, platform, fsurl, phone, email string) {
+	AlertMessages := message.Alerts
+	var fstext, titleend string
+	commonMsg := &model.CommonMessage{
+		Platform: platform,
+		Title:    titleend,
+		Text:     fstext,
+	}
+	sender := &feishu.FeiShuSender{
+		WebhookURL: fsurl,
+	}
+	err := sender.SendV2(commonMsg)
+	if err != nil {
+		log.Errorf("发送失败%s", err)
+	}
+	for _, RMessage := range AlertMessages {
+		if RMessage.Status == "resolved" {
+			titleend = "故障恢复信息"
+		} else {
+			titleend = "故障恢复信息"
+
+		}
+	}
+
+}

@@ -1,17 +1,18 @@
-{{ $var := .ExternalURL -}}
-{{ range $k, $v := .Alerts -}}
-{{ if eq $v.Status "resolved" -}}
-[恢复]
-开始时间：{{ $v.StartsAt.Format "2006-01-02 15:04:05" }}
-结束时间：{{ $v.EndsAt.Format "2006-01-02 15:04:05" }}
-故障主机IP：{{$v.Labels.instance}}
-{{$v.Annotations.description}}
-{{else -}}
-[故障]
-告警级别：{{$v.Labels.level}}
-开始时间：{{ $v.StartsAt.Format "2006-01-02 15:04:05" }}
-结束时间：{{ $v.EndsAt.Format "2006-01-02 15:04:05" }}
-故障主机IP：{{$v.Labels.instance}}
-{{$v.Annotations.description}}
-{{ end }}
+{{ $var := .ExternalURL}}{{ range $k, $v := .Alerts }}{{if eq $v.Status "resolved"}}
+**【开始时间】**: {{$v.StartsAt.Format "2006-01-02 15:04:05"}}
+**【结束时间】**: {{.EndsAt.Format "2006-01-02 15:04:05"}}
+**【故障主机】:** {{$v.Labels.instance}}
+**【告警描述】:** {{$v.Annotations.recovery_description}}
+{{ else -}}
+**【开始时间】**:{{ $v.StartsAt.Format "2006-01-02 15:04:05" }}
+{{ if not .EndsAt.IsZero -}}
+ **【结束时间】:** {{ .EndsAt.Format "2006-01-02 15:04:05" }}
 {{ end -}}
+**【故障主机】**: {{$v.Labels.instance}}
+**【告警描述】**: {{$v.Annotations.description}}
+{{- end }}
+
+---
+
+{{ end -}}
+<at id=ou_1199d79525e146bad9d0a5a46a86a10f></at>

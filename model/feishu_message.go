@@ -94,20 +94,18 @@ type InteractiveMessage struct {
 }
 
 type InteractiveMessageCard struct {
-	Schema string `json:"schema,omitempty"`
-	// Body   InteractiveMessageCardBody   `json:"body,omitempty"`
-	Elements InteractiveMessageCardElements `json:"elements"`
-	Header   InteractiveMessageCardHeader   `json:"header,omitempty"`
-}
-type InteractiveMessageCardBody struct {
-	Elements InteractiveMessageCardElements `json:"elements"`
-}
-type InteractiveMessageCardElements []struct {
-	Tag  string                             `json:"tag"`
-	Text InteractiveMessageCardElementsText `json:"text"`
-	// Actions InteractiveMessageCardElementsActions `json:"actions,omitempty"`
+	Schema   string                          `json:"schema,omitempty"`
+	Elements []InteractiveMessageCardElement `json:"elements"`
+	Header   InteractiveMessageCardHeader    `json:"header,omitempty"`
 }
 
+type InteractiveMessageCardElement struct {
+	Tag      string                             `json:"tag"`
+	Text     InteractiveMessageCardElementsText `json:"text"`
+	Content  string                             `json:"content"`
+	Elements []InteractiveMessageCardElement    `json:"elements"`
+	// Actions InteractiveMessageCardElementsActions `json:"actions,omitempty"`
+}
 type InteractiveMessageCardElementsText struct {
 	Content string `json:"content"`
 	Tag     string `json:"tag"`
@@ -127,17 +125,42 @@ type InteractiveMessageCardElementsActionsText struct {
 }
 
 type InteractiveMessageCardHeader struct {
-	Title    InteractiveMessageCardHeaderTitle `json:"title"`
-	Template string                            `json:"template,omitempty"`
+	Title       InteractiveMessageCardHeaderTitle `json:"title"`
+	Subtitle    InteractiveMessageTagContent      `json:"subtitle"`
+	TextTagList []InteractiveMessageTextTagList   `json:"text_tag_list"`
+	Template    string                            `json:"template"`
 }
 type InteractiveMessageCardHeaderTitle struct {
 	Content string `json:"content"`
-	Tag     string `json:"tag,omitempty"`
+	Tag     string `json:"tag"`
 }
-type InteractiveMessageCardConfig struct {
+type InteractiveMessageTagContent struct {
+	Content string `json:"content"`
+	Tag     string `json:"tag"`
+}
+type InteractiveMessageTagText struct {
+	Tag  string                       `json:"tag"`
+	Text InteractiveMessageTagContent `json:"text"`
+}
+type InteractiveMessageTextTagList struct {
+	Tag   string                       `json:"tag"`
+	Text  InteractiveMessageTagContent `json:"text"`
+	Color string                       `json:"color"`
 }
 
-func NewInteractiveMessage(elements InteractiveMessageCardElements, header InteractiveMessageCardHeader) *InteractiveMessage {
+type CardConfig struct {
+	Style CardConfigStyle `json:"style"`
+}
+type CardConfigStyle struct {
+	TextSize map[string]CardConfigTextSize `json:"text_size"`
+}
+type CardConfigTextSize struct {
+	Default string `json:"default,omitempty"` // 使用 omitempty 忽略空值
+	PC      string `json:"pc"`
+	Mobile  string `json:"mobile"`
+}
+
+func NewInteractiveMessage(elements []InteractiveMessageCardElement, header InteractiveMessageCardHeader) *InteractiveMessage {
 	return &InteractiveMessage{
 		MsgType: MsgTypeInteractive,
 		Card: InteractiveMessageCard{
@@ -146,6 +169,46 @@ func NewInteractiveMessage(elements InteractiveMessageCardElements, header Inter
 			// Body: InteractiveMessageCardBody{
 			// 	Elements: elements,
 			// },
+			Header: header,
+		},
+	}
+}
+
+// 卡片2.0
+type InteractiveMessageV2 struct {
+	MsgType MsgType                  `json:"msg_type"`
+	Card    InteractiveMessageCardV2 `json:"card"`
+}
+
+type InteractiveMessageCardV2 struct {
+	Schema string                       `json:"schema"`
+	Config CardConfig                   `json:"config"`
+	Header InteractiveMessageCardHeader `json:"header,omitempty"`
+
+	Body InteractiveMessageCardBody `json:"body"`
+}
+
+type InteractiveMessageCardBody struct {
+	Elements InteractiveMessageCardElements `json:"elements"`
+}
+type InteractiveMessageCardElements []struct {
+	Tag      string `json:"tag"`
+	Content  string `json:"content,omitempty"`
+	TextSize string `json:"text_size,omitempty"`
+}
+
+func NewInteractiveMessageV2(sytle CardConfigStyle, elements InteractiveMessageCardElements, header InteractiveMessageCardHeader) *InteractiveMessageV2 {
+	return &InteractiveMessageV2{
+		MsgType: MsgTypeInteractive,
+
+		Card: InteractiveMessageCardV2{
+			Schema: "2.0",
+			Config: CardConfig{
+				Style: sytle,
+			},
+			Body: InteractiveMessageCardBody{
+				Elements: elements,
+			},
 			Header: header,
 		},
 	}
