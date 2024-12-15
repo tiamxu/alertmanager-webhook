@@ -33,9 +33,7 @@ func PrometheusAlert(c *gin.Context) {
 	}
 	//转告警级别为中文
 	AlertLevel := notification.ConvertLevelToInt()
-	if notification.Status == "" {
 
-	}
 	SendContent, err := json.Marshal(notification)
 	if err != nil {
 		log.Fatalf("Error marshalling JSON: %v", err)

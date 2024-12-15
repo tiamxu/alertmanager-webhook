@@ -87,7 +87,7 @@ func NewPostMessage(title string, content [][]PostMessageContentPostZhCnContent)
 	}
 }
 
-// InteractiveMessage v2版本消息卡片
+// InteractiveMessage消息卡片
 type InteractiveMessage struct {
 	MsgType MsgType                `json:"msg_type"`
 	Card    InteractiveMessageCard `json:"card"`
@@ -125,31 +125,37 @@ type InteractiveMessageCardElementsActionsText struct {
 }
 
 type InteractiveMessageCardHeader struct {
-	Title       InteractiveMessageCardHeaderTitle `json:"title"`
-	Subtitle    InteractiveMessageTagContent      `json:"subtitle"`
-	TextTagList []InteractiveMessageTextTagList   `json:"text_tag_list"`
-	Template    string                            `json:"template"`
+	Title       InteractiveMessageCardHeaderTagContent `json:"title"`
+	Subtitle    InteractiveMessageCardHeaderTagContent `json:"subtitle"`
+	TextTagList []InteractiveMessageHeaderTextTagList  `json:"text_tag_list"`
+	Template    string                                 `json:"template"`
 }
-type InteractiveMessageCardHeaderTitle struct {
+type InteractiveMessageCardHeaderTagContent struct {
 	Content string `json:"content"`
 	Tag     string `json:"tag"`
 }
-type InteractiveMessageTagContent struct {
-	Content string `json:"content"`
-	Tag     string `json:"tag"`
+
+type InteractiveMessageTextTagContent struct {
+	Tag       string `json:"tag"`
+	Content   string `json:"content"`
+	TextSize  string `json:"text_size"`
+	TextColor string `json:"text_color"`
 }
-type InteractiveMessageTagText struct {
-	Tag  string                       `json:"tag"`
-	Text InteractiveMessageTagContent `json:"text"`
+
+type InteractiveMessageElementsTagText struct {
+	Tag  string                           `json:"tag"`
+	Text InteractiveMessageTextTagContent `json:"text"`
 }
-type InteractiveMessageTextTagList struct {
-	Tag   string                       `json:"tag"`
-	Text  InteractiveMessageTagContent `json:"text"`
-	Color string                       `json:"color"`
+type InteractiveMessageHeaderTextTagList struct {
+	Tag   string                                 `json:"tag"`
+	Text  InteractiveMessageCardHeaderTagContent `json:"text"`
+	Color string                                 `json:"color"`
 }
 
 type CardConfig struct {
-	Style CardConfigStyle `json:"style"`
+	StreamingMode bool            `json:"streaming_mode"`
+	WidthMode     string          `json:"width_mode"`
+	Style         CardConfigStyle `json:"style"`
 }
 type CardConfigStyle struct {
 	TextSize map[string]CardConfigTextSize `json:"text_size"`
@@ -184,8 +190,7 @@ type InteractiveMessageCardV2 struct {
 	Schema string                       `json:"schema"`
 	Config CardConfig                   `json:"config"`
 	Header InteractiveMessageCardHeader `json:"header,omitempty"`
-
-	Body InteractiveMessageCardBody `json:"body"`
+	Body   InteractiveMessageCardBody   `json:"body"`
 }
 
 type InteractiveMessageCardBody struct {
@@ -204,7 +209,9 @@ func NewInteractiveMessageV2(sytle CardConfigStyle, elements InteractiveMessageC
 		Card: InteractiveMessageCardV2{
 			Schema: "2.0",
 			Config: CardConfig{
-				Style: sytle,
+				StreamingMode: true,
+				WidthMode:     "default",
+				Style:         sytle,
 			},
 			Body: InteractiveMessageCardBody{
 				Elements: elements,

@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/tiamxu/alertmanager-webhook/log"
 	"github.com/tiamxu/alertmanager-webhook/model"
@@ -85,7 +86,7 @@ func (f *FeiShuSender) Send(message *model.CommonMessage) error {
 	var msg interface{}
 	// currentTime := time.Now().Format("2006-01-02 15:04:05") // 使用标准布局格式化时间
 	headers := model.InteractiveMessageCardHeader{
-		Title: model.InteractiveMessageCardHeaderTitle{
+		Title: model.InteractiveMessageCardHeaderTagContent{
 			Content: message.Title,
 			Tag:     "plain_text",
 		},
@@ -168,7 +169,7 @@ func (f *FeiShuSender) SendV2(message *model.CommonMessage) error {
 		},
 	}
 	headers := model.InteractiveMessageCardHeader{
-		Title: model.InteractiveMessageCardHeaderTitle{
+		Title: model.InteractiveMessageCardHeaderTagContent{
 			Content: message.Title,
 			Tag:     "plain_text",
 		},
@@ -176,10 +177,10 @@ func (f *FeiShuSender) SendV2(message *model.CommonMessage) error {
 		// 	Tag:     "plain_text",
 		// 	Content: "恢复",
 		// },
-		TextTagList: []model.InteractiveMessageTextTagList{
+		TextTagList: []model.InteractiveMessageHeaderTextTagList{
 			{
 				Tag: "text_tag",
-				Text: model.InteractiveMessageTagContent{
+				Text: model.InteractiveMessageCardHeaderTagContent{
 					Tag:     "plain_text",
 					Content: message.Level,
 				},
@@ -187,7 +188,7 @@ func (f *FeiShuSender) SendV2(message *model.CommonMessage) error {
 			},
 			{
 				Tag: "text_tag",
-				Text: model.InteractiveMessageTagContent{
+				Text: model.InteractiveMessageCardHeaderTagContent{
 					Tag:     "plain_text",
 					Content: message.Status,
 				},
@@ -196,17 +197,24 @@ func (f *FeiShuSender) SendV2(message *model.CommonMessage) error {
 		},
 		Template: message.Color,
 	}
+	currentTime := time.Now().Format("01-02 15:04:05") // 使用标准布局格式化时间
+	note := "<font color=carmine>**" + currentTime + "**</font>"
 
 	elements := model.InteractiveMessageCardElements{
 
 		{
-			Tag:      "markdown",
-			TextSize: "cus-0",
-			Content:  SendContent,
+			Tag: "markdown",
+			// TextSize: "cus-0",
+			Content: SendContent,
 		},
-		// {
-		// 	Tag: "hr",
-		// },
+		{
+			Tag: "hr",
+		},
+		{
+			Tag:      "markdown",
+			TextSize: "notation",
+			Content:  note,
+		},
 	}
 
 	msg = model.NewInteractiveMessageV2(style, elements, headers)
