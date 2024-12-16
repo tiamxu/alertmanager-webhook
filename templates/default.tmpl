@@ -1,20 +1,17 @@
 {{ $var := .ExternalURL }}
 {{ range $k, $v := .Alerts }}
 {{ if eq $v.Status "resolved" }}
-## [Prometheus恢复信息]
-#### [{{$v.Labels.alertname}}]({{$var}})
-###### 告警级别：{{$v.Labels.level}}
-###### 开始时间：{{ $v.StartsAt.Format "2006-01-02 15:04:05" }}
-###### 结束时间：{{ $v.EndsAt.Format "2006-01-02 15:04:05" }}
-###### 故障主机IP：{{$v.Labels.instance}}
-##### {{$v.Annotations.description}}
+[恢复]
+开始时间：{{GetCSTtime $v.StartsAt}}
+结束时间：{{ $v.EndsAt.Format "2006-01-02 15:04:05" }}
+故障主机IP：{{$v.Labels.instance}}
+{{$v.Annotations.description}}
 {{ else }}
-## [Prometheus告警信息]
-#### [{{$v.Labels.alertname}}]({{$var}})
-###### 告警级别：{{$v.Labels.level}}
-###### 开始时间：{{ $v.StartsAt.Format "2006-01-02 15:04:05" }}
-###### 结束时间：{{ $v.EndsAt.Format "2006-01-02 15:04:05" }}
-###### 故障主机IP：{{$v.Labels.instance}}
-##### {{$v.Annotations.description}}
+[故障]
+告警级别：{{$v.Labels.level}}
+开始时间：{{ $v.StartsAt.Format "2006-01-02 15:04:05" }}
+结束时间：{{ $v.EndsAt.Format "2006-01-02 15:04:05" }}
+故障主机IP：{{$v.Labels.instance}}
+{{$v.Annotations.description}}
 {{ end }}
 {{ end }}

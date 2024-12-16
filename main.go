@@ -10,7 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	api "github.com/tiamxu/alertmanager-webhook/api"
+	"github.com/tiamxu/alertmanager-webhook/api"
 	"github.com/tiamxu/alertmanager-webhook/config"
 	"github.com/tiamxu/alertmanager-webhook/log"
 )
@@ -31,7 +31,11 @@ func main() {
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "pong"})
 	})
-	r.POST("/webhook", api.HandlerWebhook)
+	r.POST("/webhook", api.PrometheusAlert)
+	r.POST("/users/get_id", api.GetUserIDsByAttributes)
+
+	r.GET("/get_user_ids", api.GetUserIDsByDepartment)
+	r.GET("/test", api.Test)
 
 	srv := &http.Server{
 		Addr:    config.AppConfig.ListenAddress,
