@@ -168,7 +168,6 @@ func (f *FeiShuSender) SendV2(message *model.CommonMessage) error {
 		// }
 		SendContent += OpenIdtext
 	} else {
-
 		for alertName, atSomeOne := range alertNameUsersList {
 			if alertName == message.Title {
 				OpenIdtext := "<at ids=" + atSomeOne + ">" + "</at>"
