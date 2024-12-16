@@ -161,18 +161,13 @@ func (f *FeiShuSender) SendV2(message *model.CommonMessage) error {
 	SendContent := message.Text
 
 	if userOpenId != "" {
-		// OpenIds := strings.Split(userOpenId, ",")
 		OpenIdtext := "<at ids=" + userOpenId + ">" + "</at>"
-		// for _, OpenId := range OpenIds {
-		// 	OpenIdtext += "<at user_id=" + OpenId + " id=" + OpenId + " email=" + OpenId + "></at>"
-		// }
 		SendContent += OpenIdtext
 	} else {
-		for alertName, atSomeOne := range alertNameUsersList {
-			if alertName == message.Title {
-				OpenIdtext := "<at ids=" + atSomeOne + ">" + "</at>"
-				SendContent += OpenIdtext
-			}
+		if _, ok := alertNameUsersList[message.Title]; ok {
+			atSomeOne := alertNameUsersList[message.Title]
+			OpenIdtext := "<at ids=" + atSomeOne + ">" + "</at>"
+			SendContent += OpenIdtext
 		}
 	}
 	var msg interface{}

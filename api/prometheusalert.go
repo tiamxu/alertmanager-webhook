@@ -47,7 +47,6 @@ func PrometheusAlert(c *gin.Context) {
 		return
 	}
 	notification.SetTemplate(alertTemplate)
-	// fmt.Printf("messageContent:%s\n", messageContent)
 	// messageContext, err := alertTemplate.Execute(notification)
 
 	// 解析 FeiShu webhook URL
@@ -58,14 +57,18 @@ func PrometheusAlert(c *gin.Context) {
 	}
 
 	// 构建和发送消息
-	if split == "true" {
+	if split == "true" && atSomeOne == "" {
 		for _, alert := range notification.Alerts {
-			// singleAlertMsg := notification
 			notification.Alerts = []model.Alert{alert}
 			notification.Status = alert.Status
 			color, status := getAlertColorAndStatus(notification)
+			if at, ok := alert.Annotations["at"]; ok {
+				sendAlertMessage(c, parsedURL.String(), level, color, status, at, alert.Labels["alertname"], notification, alertTemplate)
+			} else {
+				sendAlertMessage(c, parsedURL.String(), level, color, status, atSomeOne, alert.Labels["alertname"], notification, alertTemplate)
 
-			sendAlertMessage(c, parsedURL.String(), level, color, status, atSomeOne, alert.Labels["alertname"], notification, alertTemplate)
+			}
+			// sendAlertMessage(c, parsedURL.String(), level, color, status, atSomeOne, alert.Labels["alertname"], notification, alertTemplate)
 		}
 	} else {
 		sendAlertMessage(c, parsedURL.String(), level, color, status, atSomeOne, notification.GroupLabels["alertname"], notification, alertTemplate)
