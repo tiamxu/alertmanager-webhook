@@ -13,7 +13,8 @@ type: 类型 飞书:fs ,钉钉:dd
 tpl: 模版名，./template目录下
 split: 是否对分组告警进行拆分为单条 true:拆分,默认; false：不拆分
 fsurl: 告警webhook地址
-at: 支持at人，自定义机器人仅支持使用 open_id、user_id,多个用逗号分隔
+at: 支持at人，自定义机器人仅支持使用 open_id、user_id,多个用逗号分隔;
+    支持labels.annotations.at: "id1,id2"
 ```
 ## 告警测试
 使用postman测试

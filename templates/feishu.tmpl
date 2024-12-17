@@ -1,11 +1,6 @@
 {{ $var := .ExternalURL}}{{ range $k, $v := .Alerts }}{{if eq $v.Status "resolved"}}
-**【开始时间】**:{{GetCSTtime $v.StartsAt}}
-**【结束时间】:** {{GetCSTtime $v.EndsAt}}
-**【故障主机】:** {{$v.Labels.instance}}
-**【告警描述】:** {{$v.Annotations.recovery_description}}
+> {{GetCSTtime $v.StartsAt}}|{{GetCSTtime $v.EndsAt}}|{{$v.Annotations.recovery_description}}
 {{ else }}
-**【开始时间】**:{{GetCSTtime $v.StartsAt}}
-**【故障主机】**: {{$v.Labels.instance}}
-**【告警描述】**: {{$v.Annotations.description}}
+- {{GetCSTtime $v.StartsAt}}|{{$v.Annotations.description}}
 {{ end }}
 {{- end }}

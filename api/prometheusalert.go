@@ -165,5 +165,10 @@ func getAlertColorAndStatus(notification model.AlertMessage) (string, string) {
 
 func handleError(c *gin.Context, statusCode int, message string, err error) {
 	log.Errorf("Error %s: %v", message, err)
-	c.JSON(statusCode, gin.H{"error": fmt.Sprintf("%s: %v", message, err)})
+	response := model.Response{
+		Status: statusCode,
+		Msg:    fmt.Sprintf("%s: %v", message, err),
+		Data:   nil,
+	}
+	c.JSON(statusCode, response)
 }

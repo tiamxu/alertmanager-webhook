@@ -25,8 +25,7 @@ type FeiShuSender struct {
 
 // 根据告警名字@人
 var alertNameUsersList = map[string]string{
-	"cpu告警":  "ou_1199d79525e146bad9d0a5a46a86a10f,ou_1199d79525e146bad9d0a5a46a86a10f",
-	"服务异常告警": "ou_1199d79525e146bad9d0a5a46a86a10f",
+	"test告警名称": "ou_1199d79525e146bad9d0a5a46a86a10f,ou_1199d79525e146bad9d0a5a46a86a10f",
 }
 
 // 富文本
