@@ -1,6 +1,10 @@
 env: dev
 log_level: info
-listen_address: :8801
+http_srv:
+  address: :8801
+  keep_alive: true
+  read_timeout: 30s
+  write_timeout: 30s
 #热更新配置文件
 hot_reload: true
 alert_type: "feishu" #platform "dingtalk","feishu"
