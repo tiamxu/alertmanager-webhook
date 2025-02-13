@@ -25,17 +25,17 @@ func PrometheusAlert(c *gin.Context) {
 	atSomeOne := c.Query("at")
 	split := c.Query("split")
 
-	messageData, err := alertService.ProcessAlert(&notification, webhookType, templateName, fsURL, atSomeOne, split)
+	response, err := alertService.ProcessAlert(&notification, webhookType, templateName, fsURL, atSomeOne, split)
 	if err != nil {
 		handleError(c, http.StatusInternalServerError, "processing alert failed", err)
 		return
 	}
 
-	response := model.Response{
-		Code: http.StatusOK,
-		Msg:  "successful send alert notification!",
-		Data: messageData,
-	}
+	// response := model.Response{
+	// 	Code: http.StatusOK,
+	// 	Msg:  "successful send alert notification!",
+	// 	Data: messageData,
+	// }
 	c.JSON(http.StatusOK, response)
 }
 
