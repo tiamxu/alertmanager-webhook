@@ -29,3 +29,16 @@
 **【告警描述】**: {{$v.Annotations.description}}
 {{ end }}
 {{- end }}
+
+
+#dingding
+{{ $var := .ExternalURL}}{{ range $k, $v := .Alerts }}{{if eq $v.Status "resolved"}}
+#### 开始时间：{{GetCSTtime $v.StartsAt}}  
+#### 结束时间：{{GetCSTtime $v.EndsAt}}
+#### 描述信息: {{$v.Annotations.recovery_description}}  
+{{else}}
+#### 开始时间：{{GetCSTtime $v.StartsAt}}  
+#### 结束时间：{{GetCSTtime $v.EndsAt}}
+#### 描述信息: {{$v.Annotations.recovery_description}}  
+{{end}}
+{{ end }}

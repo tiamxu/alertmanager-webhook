@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/tiamxu/alertmanager-webhook/config"
+	"github.com/tiamxu/alertmanager-webhook/dingtalk"
 	"github.com/tiamxu/alertmanager-webhook/feishu"
-	"github.com/tiamxu/alertmanager-webhook/log"
 	"github.com/tiamxu/alertmanager-webhook/model"
+	"github.com/tiamxu/kit/log"
 )
 
 type AlertService struct{}
@@ -19,8 +19,8 @@ func NewAlertService() *AlertService {
 	return &AlertService{}
 }
 
-func (s *AlertService) ProcessAlert(notification *model.AlertMessage, webhookType, templateName, fsURL, atSomeOne, split string) ([]map[string]interface{}, error) {
-	if webhookType != "fs" || templateName == "" {
+func (s *AlertService) ProcessAlert(notification *model.AlertMessage, webhookType, templateName, webhookURL, atSomeOne, split string) ([]map[string]interface{}, error) {
+	if webhookType != "fs" && webhookType != "dd" || templateName == "" {
 		return nil, fmt.Errorf("invalid or missing parameters")
 	}
 
@@ -36,13 +36,36 @@ func (s *AlertService) ProcessAlert(notification *model.AlertMessage, webhookTyp
 	}
 	notification.SetTemplate(alertTemplate)
 
-	// 解析 FeiShu webhook URL
-	parsedURL, err := url.Parse(fsURL)
+	// 解析  webhook URL
+	_, err = url.Parse(webhookURL)
 	if err != nil {
-		return nil, fmt.Errorf("invalid fsurl parameter: %v", err)
+		return nil, fmt.Errorf("invalid webhook url parameter: %v", err)
 	}
 
 	var messageData []map[string]interface{}
+
+	// 根据不同类型创建不同的发送器
+	var sender model.MessageSender
+	var platform string
+
+	switch webhookType {
+	case "fs":
+		platform = "feishu"
+		sender = &feishu.FeiShuSender{
+			WebhookURL: webhookURL,
+		}
+	case "dd":
+		platform = "dingtalk"
+		// 从 URL 中解析 secret
+		secret := ""
+		if u, err := url.Parse(webhookURL); err == nil {
+			secret = u.Query().Get("secret")
+		}
+		sender = &dingtalk.DingTalkSender{
+			WebhookURL: webhookURL,
+			Secret:     secret,
+		}
+	}
 
 	// 构建和发送消息
 	if split == "true" {
@@ -54,7 +77,17 @@ func (s *AlertService) ProcessAlert(notification *model.AlertMessage, webhookTyp
 			if atInner, ok := alert.Annotations["at"]; ok {
 				at = atInner
 			}
-			_, err := s.sendAlertMessage(parsedURL.String(), level, color, status, at, alert.Labels["alertname"], notification, alertTemplate)
+			_, err := s.sendAlertMessage(
+				level,
+				color,
+				status,
+				at,
+				notification.GroupLabels["alertname"],
+				notification,
+				alertTemplate,
+				sender,
+				platform,
+			)
 			if err != nil {
 				return nil, fmt.Errorf("message sending failed: %v", err)
 			}
@@ -66,7 +99,21 @@ func (s *AlertService) ProcessAlert(notification *model.AlertMessage, webhookTyp
 			})
 		}
 	} else {
-		_, err := s.sendAlertMessage(parsedURL.String(), level, color, status, atSomeOne, notification.GroupLabels["alertname"], notification, alertTemplate)
+		at := atSomeOne
+		if atInner, ok := notification.Alerts[0].Annotations["at"]; ok {
+			at = atInner
+		}
+		_, err := s.sendAlertMessage(
+			level,
+			color,
+			status,
+			at,
+			notification.GroupLabels["alertname"],
+			notification,
+			alertTemplate,
+			sender,
+			platform,
+		)
 		if err != nil {
 			return nil, fmt.Errorf("message sending failed: %v", err)
 		}
@@ -81,14 +128,14 @@ func (s *AlertService) ProcessAlert(notification *model.AlertMessage, webhookTyp
 	return messageData, nil
 }
 
-func (s *AlertService) sendAlertMessage(fsurl, level, color, status, atSomeOne, title string, message interface{}, tmpl *model.Template) (string, error) {
+func (s *AlertService) sendAlertMessage(level, color, status, atSomeOne, title string, message interface{}, tmpl *model.Template, sender model.MessageSender, platform string) (string, error) {
 	messageContent, err := tmpl.Execute(message)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("template execution failed: %v", err)
 	}
 
 	commonMsg := &model.CommonMessage{
-		Platform:  config.AppConfig.AlertType,
+		Platform:  platform,
 		Title:     title,
 		Text:      messageContent,
 		Level:     level,
@@ -97,11 +144,8 @@ func (s *AlertService) sendAlertMessage(fsurl, level, color, status, atSomeOne, 
 		AtSomeOne: atSomeOne,
 	}
 
-	sender := &feishu.FeiShuSender{
-		WebhookURL: fsurl,
-	}
-	if err := sender.SendV2(commonMsg); err != nil {
-		return "", err
+	if err := sender.Send(commonMsg); err != nil {
+		return "", fmt.Errorf("send message failed: %v", err)
 	}
 
 	return messageContent, nil
@@ -111,7 +155,7 @@ func (s *AlertService) getAlertColorAndStatus(notification model.AlertMessage) (
 	content, err := json.Marshal(notification)
 	if err != nil {
 		log.Errorf("getAlertColorAndStatus Error marshalling JSON: %v", err)
-		return "red", "故障" // 默认返回红色和“故障”状态
+		return "red", "故障" // 默认返回红色和"故障"状态
 	}
 	contentStr := strings.ToLower(string(content))
 	switch {

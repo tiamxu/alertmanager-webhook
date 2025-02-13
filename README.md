@@ -6,15 +6,18 @@ go build -o main
 ## 测试接口
 ```
 http://localhost:8801/webhook?type=fs&tpl=feishu&fsurl=https://open.feishu.cn/open-apis/bot/v2/hook/bf8bb912-bc2e-40ad-9533-fcb8068aa621&at=ou_1199d79525e146bad9d0a5a46a86a10f
+
+http://localhost:8801/webhook?type=dd&tpl=dingtalk&ddurl=https://oapi.dingtalk.com/robot/send?access_token=9ef3af0bc7052966a73c6642eed0e7c90e35a4dd6860887dd9029c65255d5abd&split=true&at=1888888888
 ```
 ## 参数说明
 ```
 type: 类型 飞书:fs ,钉钉:dd
 tpl: 模版名，./template目录下
 split: 是否对分组告警进行拆分为单条 true:拆分,默认; false：不拆分
-fsurl: 告警webhook地址
-at: 支持at人，自定义机器人仅支持使用 open_id、user_id,多个用逗号分隔;
-    支持labels.annotations.at: "id1,id2"
+fsurl/ddurl: 告警webhook地址,飞书是fsurl, 钉钉是ddurl
+at: 支持at人，自定义机器人支持f使用 open_id、user_id,手机号, 多个用逗号分隔;
+    另外支持规则自定义@人labels.annotations.at: "id1,id2", 钉钉使用手机号
+    默认为空	
 ```
 ## 告警测试
 使用postman测试
@@ -33,6 +36,27 @@ at: 支持at人，自定义机器人仅支持使用 open_id、user_id,多个用�
 {{- end }}
 {{ end -}}
 <at id=ou_1199d79525e146bad9d0a5a46a86a10f></at>
+```
+## 钉钉告警模版
+```
+{{ $var := .ExternalURL}}{{ range $k,$v:=.Alerts }}
+{{if eq $v.Status "resolved"}}
+
+##### <font color="#02b340">触发时间</font>: {{GetCSTtime $v.StartsAt}}
+##### <font color="#02b340">结束时间</font>: {{GetCSTtime $v.EndsAt}}
+##### <font color="#02b340">描述信息</font>: {{$v.Annotations.recovery_description}}  
+
+---
+
+{{ else }}
+
+##### <font color="#FF0000">触发时间</font>: {{GetCSTtime $v.StartsAt}}
+##### <font color="#FF0000">描述信息</font>: {{$v.Annotations.recovery_description}}  
+
+---
+
+{{end}}
+{{- end }}
 ```
 ## 测试数据
 ```
@@ -53,6 +77,7 @@ at: 支持at人，自定义机器人仅支持使用 open_id、user_id,多个用�
 			"upstream": "cashier_api"
 		},
 		"annotations": {
+			"at": "1888888888",
 			"description": "[故障] Nginx: nginx-1 服务: cashier_api 节点: 172.18.163.177:8085 down",
 			"recovery_description": "[已恢复]: 服务: cashier_api "
 		},
@@ -73,6 +98,7 @@ at: 支持at人，自定义机器人仅支持使用 open_id、user_id,多个用�
 			"upstream": "order-server"
 		},
 		"annotations": {
+			"at": "1888888888",
 			"description": "[故障] Nginx: nginx-1 服务: order-server 节点: 172.18.163.177:8880 down",
 			"recovery_description": "[已恢复]: 服务: order-server "
 		},

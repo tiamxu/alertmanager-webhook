@@ -13,11 +13,6 @@ open_feishu: 1
 feishu:
   msg_type: post
   fs_url: https://open.feishu.cn/open-apis/bot/v2/hook/bf8bb912-bc2e-40ad-9533-fcb8068aa621
-feishu_robots:
-  - name: robot1
-    webhook_url: "https://open.feishu.cn/open-apis/bot/v2/hook/bf8bb912-bc2e-40ad-9533-fcb8068aa621"
-  - name: robot2
-    webhook_url: "https://open.feishu.cn/open-apis/bot/v2/hook/another-webhook-url"
 templates:
   - name: default
     path: "templates/template.tmpl"

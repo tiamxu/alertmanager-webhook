@@ -16,9 +16,7 @@ type Config struct {
 	OpenFeishu    int              `yaml:"open_feishu"`
 	Dingtalk      DingtalkConfig   `yaml:"dingtalk"`
 	Feishu        FeishuConfig     `yaml:"feishu"`
-	FeishuRobots  []RobotConfig    `yaml:"feishu_robots"`
 	Templates     []TemplateConfig `yaml:"templates"`
-	DB            DBConfig         `yaml:"db"`
 }
 
 type DingtalkConfig struct {
@@ -28,25 +26,10 @@ type DingtalkConfig struct {
 type FeishuConfig struct {
 	WebhookURL string `yaml:"fs_url"`
 }
-type RobotConfig struct {
-	Name       string `yaml:"name"`
-	WebhookURL string `yaml:"webhook_url"`
-}
 
 type TemplateConfig struct {
 	Name string `yaml:"name"`
 	Path string `yaml:"path"`
-}
-type DBConfig struct {
-	Driver          string `yaml:"driver"`
-	Database        string `yaml:"database"`
-	Username        string `yaml:"username"`
-	Password        string `yaml:"password"`
-	Host            string `yaml:"host"`
-	Port            int    `yaml:"port"`
-	MaxIdleConns    int    `yaml:"max_idle_conns"`
-	MaxOpenConns    int    `yaml:"max_open_conns"`
-	ConnMaxLifetime int    `yaml:"conn_max_lifetime"`
 }
 
 var AppConfig *Config

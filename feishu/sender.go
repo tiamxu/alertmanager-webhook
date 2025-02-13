@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tiamxu/alertmanager-webhook/log"
 	"github.com/tiamxu/alertmanager-webhook/model"
+	"github.com/tiamxu/kit/log"
 )
 
 type At struct {
@@ -67,20 +67,14 @@ func (f *FeiShuSender) SendToText(message *model.CommonMessage) error {
 }
 
 // 发送卡片类型消息schema=1.0版本
-func (f *FeiShuSender) Send(message *model.CommonMessage) error {
+func (f *FeiShuSender) SendV1(message *model.CommonMessage) error {
 	if message.Platform != "feishu" {
 		return fmt.Errorf("invalid platform for FeiShuSender")
 	}
 
 	var color, userOpenId string
-	if strings.Count(message.Text, "resolved") > 0 && strings.Count(message.Text, "firing") > 0 {
-		color = "orange"
-	} else if strings.Count(message.Text, "resolved") > 0 {
-		color = "green"
-	} else {
-		color = "red"
-	}
 
+	color = message.Color
 	SendContent := message.Text
 
 	if userOpenId != "" {
@@ -92,7 +86,6 @@ func (f *FeiShuSender) Send(message *model.CommonMessage) error {
 		SendContent += OpenIdtext
 	}
 	// SendContent += "<at id=7a22d6ab></at>"
-	// SendContent += "<at id=l.xu@unipal.com.cn></at>"
 	var msg interface{}
 	// currentTime := time.Now().Format("2006-01-02 15:04:05") // 使用标准布局格式化时间
 	headers := model.InteractiveMessageCardHeader{
@@ -152,7 +145,7 @@ func (f *FeiShuSender) Send(message *model.CommonMessage) error {
 }
 
 // 发送卡片类型消息schema=2.0版本
-func (f *FeiShuSender) SendV2(message *model.CommonMessage) error {
+func (f *FeiShuSender) Send(message *model.CommonMessage) error {
 	if message.Platform != "feishu" {
 		return fmt.Errorf("invalid platform for FeiShuSender")
 	}

@@ -11,7 +11,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/tiamxu/alertmanager-webhook/log"
+	"github.com/tiamxu/kit/log"
 )
 
 type Template struct {

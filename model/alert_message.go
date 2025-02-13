@@ -29,22 +29,6 @@ type AlertMessage struct {
 	Template          *Template
 }
 
-// type Alerts []Alert
-
-// func (a Alerts) Len() int { // 重写 Len() 方法
-//
-//		return len(a)
-//	}
-//
-// func (a Alerts) Swap(i, j int) { // 重写 Swap() 方法
-//
-//		a[i], a[j] = a[j], a[i]
-//	}
-//
-// func (a Alerts) Less(i, j int) bool { // 重写 Less() 方法， 从大到小排序
-//
-//		return a[j].Labels.Level < a[i].Labels.Level
-//	}
 func (n *AlertMessage) GetTemplateName() string {
 	if val, ok := n.CommonAnnotations["template"]; ok {
 		return val

@@ -1,0 +1,18 @@
+{{ $var := .ExternalURL}}{{ range $k,$v:=.Alerts }}
+{{if eq $v.Status "resolved"}}
+
+##### <font color="#02b340">触发时间</font>: {{GetCSTtime $v.StartsAt}}
+##### <font color="#02b340">结束时间</font>: {{GetCSTtime $v.EndsAt}}
+##### <font color="#02b340">描述信息</font>: {{$v.Annotations.recovery_description}}  
+
+---
+
+{{ else }}
+
+##### <font color="#FF0000">触发时间</font>: {{GetCSTtime $v.StartsAt}}
+##### <font color="#FF0000">描述信息</font>: {{$v.Annotations.recovery_description}}  
+
+---
+
+{{end}}
+{{- end }}

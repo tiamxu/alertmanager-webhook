@@ -12,7 +12,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/tiamxu/alertmanager-webhook/api"
 	"github.com/tiamxu/alertmanager-webhook/config"
-	"github.com/tiamxu/alertmanager-webhook/log"
+	"github.com/tiamxu/alertmanager-webhook/service"
+	"github.com/tiamxu/kit/log"
 )
 
 func main() {
@@ -28,14 +29,21 @@ func main() {
 		log.Fatalf("无效的日志级别设置: %v", err)
 	}
 	r := gin.Default()
+
+	// 初始化 service 和 handler
+	alertService := service.NewAlertService()          // 创建 service 实例
+	alertHandler := api.NewAlertHandler(*alertService) // 创建 handler 实例
+
+	// 路由注册
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "pong"})
 	})
-	r.POST("/webhook", api.PrometheusAlert)
-	r.POST("/users/get_id", api.GetUserIDsByAttributes)
 
+	// 使用 handler 的方法替代直接调用
+	r.POST("/webhook", alertHandler.PrometheusAlert)
+
+	r.POST("/users/get_id", api.GetUserIDsByAttributes)
 	r.GET("/get_user_ids", api.GetUserIDsByDepartment)
-	r.GET("/test", api.Test)
 
 	srv := &http.Server{
 		Addr:    config.AppConfig.ListenAddress,

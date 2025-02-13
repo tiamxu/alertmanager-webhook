@@ -1,6 +1,6 @@
 {{ $var := .ExternalURL}}{{ range $k, $v := .Alerts }}{{if eq $v.Status "resolved"}}
 > {{GetCSTtime $v.StartsAt}}|{{GetCSTtime $v.EndsAt}}|{{$v.Annotations.recovery_description}}
 {{ else }}
-- {{GetCSTtime $v.StartsAt}}|{{$v.Annotations.description}}
+> {{GetCSTtime $v.StartsAt}}|{{$v.Annotations.description}}
 {{ end }}
 {{- end }}
