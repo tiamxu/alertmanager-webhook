@@ -24,18 +24,21 @@ at: 支持at人，自定义机器人支持f使用 open_id、user_id,手机号, �
 
 ## 飞书告警模版
 ```
-{{ $var := .ExternalURL}}{{ range $k, $v := .Alerts }}{{if eq $v.Status "resolved"}}
-**【开始时间】**:{{GetCSTtime $v.StartsAt}}
-**【结束时间】:** {{GetCSTtime $v.EndsAt}}
-**【故障主机】:** {{$v.Labels.instance}}
-**【告警描述】:** {{$v.Annotations.recovery_description}}
+{{ $var := .ExternalURL}}{{ range $k, $v := .Alerts }}
+{{if eq $v.Status "resolved"}}
+**<font color="green">开始时间</font>:** {{GetCSTtime $v.StartsAt}}
+**<font color="green">结束时间</font>:** {{GetCSTtime $v.EndsAt}}
+**<font color="green">故障主机</font>:** {{$v.Labels.instance}}
+**<font color="green">告警详情</font>:** {{$v.Annotations.summary}}
+**<font color="red">告警描述</font>:** {{$v.Annotations.recovery_description}}
 {{ else }}
-**【开始时间】**:{{GetCSTtime $v.StartsAt}}
-**【故障主机】**: {{$v.Labels.instance}}
-**【告警描述】**: {{$v.Annotations.description}}
+**<font color="red">开始时间</font>:** {{GetCSTtime $v.StartsAt}}
+**<font color="red">故障主机</font>:** {{$v.Labels.instance}}
+**<font color="red">告警详情</font>:** {{$v.Annotations.summary}}
+**<font color="green">告警描述</font>:** {{$v.Annotations.description}}
 {{- end }}
-{{ end -}}
-<at id=ou_1199d79525e146bad9d0a5a46a86a10f></at>
+{{- end -}}
+
 ```
 ## 钉钉告警模版
 ```
