@@ -13,6 +13,30 @@ import (
 	"github.com/tiamxu/kit/log"
 )
 
+// 添加默认模板常量
+const (
+	defaultFeishuTemplate = `{{ $var := .ExternalURL}}{{ range $k, $v := .Alerts }}{{if eq $v.Status "resolved"}}
+> {{GetCSTtime $v.StartsAt}}|{{GetCSTtime $v.EndsAt}}|{{$v.Annotations.recovery_description}}
+{{ else }}
+> {{GetCSTtime $v.StartsAt}}|{{$v.Annotations.description}}
+{{ end }}
+{{- end }}`
+
+	defaultDingtalkTemplate = `{{ $var := .ExternalURL}}{{ range $k,$v:=.Alerts }}
+{{ if eq $v.Status "resolved" }}
+##### <font color="green">触发时间</font>: {{GetCSTtime $v.StartsAt}}
+##### <font color="green">结束时间</font>: {{GetCSTtime $v.EndsAt}}
+##### <font color="green">告警信息</font>: {{$v.Annotations.recovery_description}}
+---  
+{{ else }}
+
+##### <font color="red">触发时间</font>: {{GetCSTtime $v.StartsAt}}
+##### <font color="red">告警信息</font>: {{$v.Annotations.recovery_description}}
+---  
+{{ end }}
+{{- end }}`
+)
+
 type AlertService struct{}
 
 func NewAlertService() *AlertService {
@@ -20,17 +44,30 @@ func NewAlertService() *AlertService {
 }
 
 func (s *AlertService) ProcessAlert(notification *model.AlertMessage, webhookType, templateName, webhookURL, atSomeOne, split string) ([]map[string]interface{}, error) {
-	if webhookType != "fs" && webhookType != "dd" || templateName == "" {
-		return nil, fmt.Errorf("invalid or missing parameters")
+	if webhookType != "fs" && webhookType != "dd" {
+		return nil, fmt.Errorf("invalid webhook type")
 	}
 
 	// 转告警级别为中文并设置消息颜色和状态
 	level := notification.ConvertLevelToInt()
 	color, status := s.getAlertColorAndStatus(*notification)
 
-	// 加载模板文件
-	templateFile := filepath.Join("templates", templateName+".tmpl")
-	alertTemplate, err := model.NewTemplate(templateFile)
+	var alertTemplate *model.Template
+	var err error
+
+	if templateName == "" {
+		// 使用默认模板
+		defaultTemplate := defaultFeishuTemplate
+		if webhookType == "dd" {
+			defaultTemplate = defaultDingtalkTemplate
+		}
+		alertTemplate, err = model.NewTemplateFromString(defaultTemplate)
+	} else {
+		// 使用文件模板
+		templateFile := filepath.Join("templates", templateName+".tmpl")
+		alertTemplate, err = model.NewTemplate(templateFile)
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("template loading failed: %v", err)
 	}
@@ -167,3 +204,4 @@ func (s *AlertService) getAlertColorAndStatus(notification model.AlertMessage) (
 		return "red", "故障"
 	}
 }
+

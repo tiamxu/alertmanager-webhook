@@ -19,6 +19,25 @@ type Template struct {
 	tmpl *template.Template
 }
 
+func NewTemplateFromString(templateContent string) (*Template, error) {
+	tmpl, err := template.New("default").Funcs(template.FuncMap{
+		"GetTimeDuration": GetTimeDuration,
+		"GetCSTtime":      GetCSTtime,
+		"TimeFormat":      TimeFormat,
+		"GetTime":         GetTime,
+		"toUpper":         strings.ToUpper,
+		"toLower":         strings.ToLower, // 其他需要的函数...
+	}).Parse(templateContent)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &Template{
+		tmpl: tmpl,
+	}, nil
+}
+
 func NewTemplate(filename string) (*Template, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {

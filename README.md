@@ -12,7 +12,7 @@ http://localhost:8801/webhook?type=dd&tpl=dingtalk&ddurl=https://oapi.dingtalk.c
 ## 参数说明
 ```
 type: 类型 飞书:fs ,钉钉:dd
-tpl: 模版名，./template目录下
+tpl: 模版名，./template目录下,名字为模版名。 非必须，可不提供
 split: 是否对分组告警进行拆分为单条 true:拆分,默认; false：不拆分
 fsurl/ddurl: 告警webhook地址,飞书是fsurl, 钉钉是ddurl
 at: 支持at人，自定义机器人支持f使用 open_id、user_id,手机号, 多个用逗号分隔;
