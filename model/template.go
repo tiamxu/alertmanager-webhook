@@ -14,6 +14,38 @@ import (
 	"github.com/tiamxu/kit/log"
 )
 
+var defaultFuncMap = template.FuncMap{
+	"GetTimeDuration": GetTimeDuration,
+	"GetCSTtime":      GetCSTtime,
+	"TimeFormat":      TimeFormat,
+	"GetTime":         GetTime,
+	"toUpper":         strings.ToUpper,
+	"toLower":         strings.ToLower,
+	// "title":           strings.Title,
+
+	"join": func(sep string, s []string) string {
+		return strings.Join(s, sep)
+	},
+	"match": regexp.MatchString,
+	"safeHtml": func(text string) tmplhtml.HTML {
+		return tmplhtml.HTML(text)
+	},
+	"reReplaceAll": func(pattern, repl, text string) string {
+		re := regexp.MustCompile(pattern)
+		return re.ReplaceAllString(text, repl)
+	},
+	"stringSlice": func(s ...string) []string {
+		return s
+	},
+	"SplitString": func(pstring string, start int, stop int) string {
+		log.Infof("SplitString", pstring)
+		if stop < 0 {
+			return pstring[start : len(pstring)+stop]
+		}
+		return pstring[start:stop]
+	},
+}
+
 type Template struct {
 	Name string
 	tmpl *template.Template
@@ -38,48 +70,27 @@ func NewTemplateFromString(templateContent string) (*Template, error) {
 	}, nil
 }
 
-func NewTemplate(filename string) (*Template, error) {
-	data, err := os.ReadFile(filename)
+// NewTemplate 创建新的模板，支持从文件或字符串创建
+func NewTemplate(source string) (*Template, error) {
+	var templateContent string
+
+	// 检查是否以 .tmpl 结尾，如果是则视为文件路径
+	if strings.HasSuffix(source, ".tmpl") {
+		data, err := os.ReadFile(source)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read template file: %v", err)
+		}
+		templateContent = string(data)
+	} else {
+		// 否则直接将输入视为模板内容
+		templateContent = source
+	}
+
+	tmpl, err := template.New("").Funcs(defaultFuncMap).Parse(templateContent)
 	if err != nil {
 		return nil, err
 	}
-	funcMap := template.FuncMap{
-		"GetTimeDuration": GetTimeDuration,
-		"GetCSTtime":      GetCSTtime,
-		"TimeFormat":      TimeFormat,
-		"GetTime":         GetTime,
-		"toUpper":         strings.ToUpper,
-		"toLower":         strings.ToLower,
-		"title":           strings.Title,
-		// join is equal to strings.Join but inverts the argument order
-		// for easier pipelining in templates.
-		"join": func(sep string, s []string) string {
-			return strings.Join(s, sep)
-		},
-		"match": regexp.MatchString,
-		"safeHtml": func(text string) tmplhtml.HTML {
-			return tmplhtml.HTML(text)
-		},
-		"reReplaceAll": func(pattern, repl, text string) string {
-			re := regexp.MustCompile(pattern)
-			return re.ReplaceAllString(text, repl)
-		},
-		"stringSlice": func(s ...string) []string {
-			return s
-		},
-		"SplitString": func(pstring string, start int, stop int) string {
-			log.Infof("SplitString", pstring)
-			if stop < 0 {
-				return pstring[start : len(pstring)+stop]
-			}
-			return pstring[start:stop]
-		},
-	}
-	tmpl, err := template.New("").Funcs(funcMap).Parse(string(data))
-	// tmpl, err := template.New("alert").Parse(string(data))
-	if err != nil {
-		return nil, err
-	}
+
 	return &Template{tmpl: tmpl}, nil
 }
 
@@ -190,3 +201,4 @@ func TimeFormat(timestr, format string) string {
 		return returnTime.Format(format)
 	}
 }
+

@@ -61,7 +61,7 @@ func (s *AlertService) ProcessAlert(notification *model.AlertMessage, webhookTyp
 		if webhookType == "dd" {
 			defaultTemplate = defaultDingtalkTemplate
 		}
-		alertTemplate, err = model.NewTemplateFromString(defaultTemplate)
+		alertTemplate, err = model.NewTemplate(defaultTemplate)
 	} else {
 		// 使用文件模板
 		templateFile := filepath.Join("templates", templateName+".tmpl")
