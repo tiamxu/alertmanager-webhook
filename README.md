@@ -3,7 +3,7 @@
 go build -o main
 ./main
 ```
-## 测试接口
+## webhook接口示例
 ```
 http://localhost:8801/webhook?type=fs&tpl=feishu&fsurl=https://open.feishu.cn/open-apis/bot/v2/hook/bf8bb912-bc2e-40ad-9533-fcb8068aa621&at=ou_1199d79525e146bad9d0a5a46a86a10f
 
@@ -11,18 +11,21 @@ http://localhost:8801/webhook?type=dd&tpl=dingtalk&ddurl=https://oapi.dingtalk.c
 ```
 ## 参数说明
 ```
-type: 类型 飞书:fs ,钉钉:dd
-tpl: 模版名，./template目录下,名字为模版名。 非必须，可不提供
-split: 是否对分组告警进行拆分为单条 true:拆分,默认; false：不拆分
-fsurl/ddurl: 告警webhook地址,飞书是fsurl, 钉钉是ddurl
-at: 支持at人，自定义机器人支持f使用 open_id、user_id,手机号, 多个用逗号分隔;
-    另外支持规则自定义@人labels.annotations.at: "id1,id2", 钉钉使用手机号
-    默认为空	
+type: (Required)类型 飞书:fs ,钉钉:dd
+tpl: (Optional)模版名 ./template目录下,名字为模版名。 非必须，可不提供
+split: (Optional) 是否对分组告警进行拆分为单条 true:拆分,默认; false：不拆分
+fsurl/ddurl: (Required)告警webhook地址,飞书是fsurl, 钉钉是ddurl
+at: (Optional )支持at人，自定义机器人支持使用 open_id、user_id;钉钉使用手机号, 多个用逗号分隔;
+    另外支持规则rule@人labels.annotations.at: "id1,id2"
 ```
+## 支持功能
+- 支持飞书、钉钉告警
+- 支持定义卡片title，为告警规则rule名称
+- 支持自定义消息模版，不配置为默认模版
 ## 告警测试
 使用postman测试
 
-## 飞书告警模版
+## 飞书告警模版示例
 ```
 {{ $var := .ExternalURL}}{{ range $k, $v := .Alerts }}
 {{if eq $v.Status "resolved"}}
@@ -38,7 +41,6 @@ at: 支持at人，自定义机器人支持f使用 open_id、user_id,手机号, �
 **<font color="green">告警描述</font>:** {{$v.Annotations.description}}
 {{- end }}
 {{- end -}}
-
 ```
 ## 钉钉告警模版
 ```
