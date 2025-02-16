@@ -5,21 +5,29 @@ http_srv:
   keep_alive: true
   read_timeout: 30s
   write_timeout: 30s
+db:
+  driver: "mysql"
+  database: "test"
+  username: "root"
+  password: "JLZqwDlJi5rY8WM"
+  host: "120.24.61.231"
+  port: 13306
+  max_idle_conns: 5
+  max_open_conns: 10
+  conn_max_lifetime: 3600
 #热更新配置文件
 hot_reload: true
 alert_type: "feishu" #platform "dingtalk","feishu"
 #---------------------↓webhook-----------------------
 open_dingding: 1 # 0 for off, 1 for on
 dingding:
-  dd_url: https://oapi.dingtalk.com/robot/send?access_token=xxxxx
+  bots:
+    - name: "bot1"
+      webhook_url: https://oapi.dingtalk.com/robot/send?access_token=xxxxx
+      secret: "xxx"
 #是否开启飞书告警通道,可同时开始多个通道0为关闭,1为开启
 open_feishu: 1
 feishu:
   msg_type: post
   fs_url: https://open.feishu.cn/open-apis/bot/v2/hook/bf8bb912-bc2e-40ad-9533-fcb8068aa621
-templates:
-  - name: default
-    path: "templates/template.tmpl"
-  - name: critical
-    path: "templates/critical.tmpl"
 

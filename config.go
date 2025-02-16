@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/tiamxu/alertmanager-webhook/model"
 	httpkit "github.com/tiamxu/kit/http"
 	"github.com/tiamxu/kit/log"
+	"github.com/tiamxu/kit/sql"
 	"gopkg.in/yaml.v3"
 )
 
@@ -20,6 +22,7 @@ type Config struct {
 	Dingtalk     DingtalkConfig          `yaml:"dingtalk"`
 	Feishu       FeishuConfig            `yaml:"feishu"`
 	Templates    []TemplateConfig        `yaml:"templates"`
+	DB           *sql.Config             `yaml:"db" xml:"db" json:"db"`
 }
 
 type DingtalkConfig struct {
@@ -68,7 +71,10 @@ func (c *Config) Initial() (err error) {
 	log.SetGlobalFields(log.Fields{
 		"appname": "alert",
 	})
+	if err = model.Init(cfg.DB); err != nil {
+		return fmt.Errorf("database initialization failed: %w", err)
 
+	}
 	return nil
 }
 func loadConfig() error {

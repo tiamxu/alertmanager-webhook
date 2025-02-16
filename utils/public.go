@@ -1,9 +1,34 @@
-package untils
+package utils
 
 import (
 	"fmt"
+	"net/url"
 	"strconv"
 	"time"
+)
+
+// 添加默认模板常量
+const (
+	DefaultFeishuTemplate = `{{ $var := .ExternalURL}}{{ range $k, $v := .Alerts }}{{if eq $v.Status "resolved"}}
+> {{GetCSTtime $v.StartsAt}}|{{GetCSTtime $v.EndsAt}}|{{$v.Annotations.recovery_description}}
+{{ else }}
+> {{GetCSTtime $v.StartsAt}}|{{$v.Annotations.description}}
+{{ end }}
+{{- end }}`
+
+	DefaultDingtalkTemplate = `{{ $var := .ExternalURL}}{{ range $k,$v:=.Alerts }}
+{{ if eq $v.Status "resolved" }}
+##### <font color="green">触发时间</font>: {{GetCSTtime $v.StartsAt}}
+##### <font color="green">结束时间</font>: {{GetCSTtime $v.EndsAt}}
+##### <font color="green">告警信息</font>: {{$v.Annotations.recovery_description}}
+---  
+{{ else }}
+
+##### <font color="red">触发时间</font>: {{GetCSTtime $v.StartsAt}}
+##### <font color="red">告警信息</font>: {{$v.Annotations.recovery_description}}
+---  
+{{ end }}
+{{- end }}`
 )
 
 // 转换时间戳到时间字符串
@@ -102,4 +127,18 @@ func TimeFormat(timestr, format string) string {
 	} else {
 		return returnTime.Format(format)
 	}
+}
+
+func IsValidURL(webhookURL string) bool {
+	// 解析 URL
+	parsedURL, err := url.Parse(webhookURL)
+	if err != nil {
+		return false
+	}
+
+	// 校验协议是否为 http 或 https
+	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
+		return false
+	}
+	return true
 }

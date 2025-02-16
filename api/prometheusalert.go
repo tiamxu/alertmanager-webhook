@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/tiamxu/alertmanager-webhook/model"
 	"github.com/tiamxu/alertmanager-webhook/service"
+	"github.com/tiamxu/alertmanager-webhook/utils"
 	"github.com/tiamxu/kit/log"
 )
 
@@ -35,6 +36,7 @@ func (h *AlertHandler) PrometheusAlert(c *gin.Context) {
 	}
 
 	templateName := c.Query("tpl")
+	bot := c.Query("bot")
 
 	// 根据不同的 webhookType 获取对应的 URL
 	var webhookURL string
@@ -43,6 +45,11 @@ func (h *AlertHandler) PrometheusAlert(c *gin.Context) {
 		webhookURL = c.Query("fsurl")
 	case "dd":
 		webhookURL = c.Query("ddurl")
+		// 简单的参数验证
+		if bot == "" {
+			handleError(c, http.StatusBadRequest, "钉钉通知需要指定 bot 参数", nil)
+			return
+		}
 	default:
 		handleError(c, http.StatusBadRequest, "不支持的告警类型", nil)
 		return
@@ -52,11 +59,15 @@ func (h *AlertHandler) PrometheusAlert(c *gin.Context) {
 		handleError(c, http.StatusBadRequest, "缺少必要的 Webhook URL 参数", nil)
 		return
 	}
-
+	// 校验 Webhook URL 格式
+	if !utils.IsValidURL(webhookURL) {
+		handleError(c, http.StatusBadRequest, "Webhook URL 格式无效", nil)
+		return
+	}
 	atSomeOne := c.Query("at")
 	split := c.Query("split")
 
-	messageData, err := h.alertService.ProcessAlert(&notification, webhookType, templateName, webhookURL, atSomeOne, split)
+	messageData, err := h.alertService.ProcessAlert(&notification, webhookType, templateName, webhookURL, atSomeOne, split, bot)
 	if err != nil {
 		handleError(c, http.StatusInternalServerError, "处理告警失败", err)
 		return

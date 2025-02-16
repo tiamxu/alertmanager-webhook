@@ -13,13 +13,12 @@ import (
 	"github.com/tiamxu/kit/log"
 )
 
-type At struct {
-	AlertName string `json:"alertname"`
-	AtSomeOne string `json:"atSomeOne"`
-}
+// type At struct {
+// 	AlertName string `json:"alertname"`
+// 	AtSomeOne string `json:"atSomeOne"`
+// }
 
 type FeiShuSender struct {
-	Name       string
 	WebhookURL string
 }
 
@@ -223,25 +222,35 @@ func (f *FeiShuSender) Send(message *model.CommonMessage) error {
 
 	msg = model.NewInteractiveMessageV2(style, elements, headers)
 
-	payload, err := json.Marshal(msg)
-	if err != nil {
-		return err
-	}
-	// fmt.Printf("payload:%s\n", string(payload))
-	resp, err := http.Post(f.WebhookURL, "application/json", bytes.NewBuffer(payload))
-	if err != nil {
-		log.Errorln("[feishuv2]", err.Error())
-	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Errorln("[feishuv2]", err.Error())
-	}
-	log.Infoln("[feishuv2]", string(body))
-	return nil
+	// 发送请求
+	return f.sendRequest(msg)
 
 }
 
-func (f *FeiShuSender) NewFeiShuSender() {
-	return
+// sendRequest 发送HTTP请求
+func (f *FeiShuSender) sendRequest(msg interface{}) error {
+	payload, err := json.Marshal(msg)
+	if err != nil {
+		return fmt.Errorf("序列化消息失败: %v", err)
+	}
+
+	resp, err := http.Post(f.WebhookURL, "application/json", bytes.NewBuffer(payload))
+	if err != nil {
+		log.Errorln("[feishu]", err.Error())
+		return fmt.Errorf("发送请求失败: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Errorln("[feishu]", err.Error())
+		return fmt.Errorf("读取响应失败: %v", err)
+	}
+
+	log.Infoln("[feishu]", string(body))
+	return nil
+}
+
+func (f *FeiShuSender) GetPlatform() string {
+	return "feishu"
 }

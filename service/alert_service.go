@@ -10,31 +10,8 @@ import (
 	"github.com/tiamxu/alertmanager-webhook/dingtalk"
 	"github.com/tiamxu/alertmanager-webhook/feishu"
 	"github.com/tiamxu/alertmanager-webhook/model"
+	"github.com/tiamxu/alertmanager-webhook/utils"
 	"github.com/tiamxu/kit/log"
-)
-
-// 添加默认模板常量
-const (
-	defaultFeishuTemplate = `{{ $var := .ExternalURL}}{{ range $k, $v := .Alerts }}{{if eq $v.Status "resolved"}}
-> {{GetCSTtime $v.StartsAt}}|{{GetCSTtime $v.EndsAt}}|{{$v.Annotations.recovery_description}}
-{{ else }}
-> {{GetCSTtime $v.StartsAt}}|{{$v.Annotations.description}}
-{{ end }}
-{{- end }}`
-
-	defaultDingtalkTemplate = `{{ $var := .ExternalURL}}{{ range $k,$v:=.Alerts }}
-{{ if eq $v.Status "resolved" }}
-##### <font color="green">触发时间</font>: {{GetCSTtime $v.StartsAt}}
-##### <font color="green">结束时间</font>: {{GetCSTtime $v.EndsAt}}
-##### <font color="green">告警信息</font>: {{$v.Annotations.recovery_description}}
----  
-{{ else }}
-
-##### <font color="red">触发时间</font>: {{GetCSTtime $v.StartsAt}}
-##### <font color="red">告警信息</font>: {{$v.Annotations.recovery_description}}
----  
-{{ end }}
-{{- end }}`
 )
 
 type AlertService struct{}
@@ -43,149 +20,152 @@ func NewAlertService() *AlertService {
 	return &AlertService{}
 }
 
-func (s *AlertService) ProcessAlert(notification *model.AlertMessage, webhookType, templateName, webhookURL, atSomeOne, split string) ([]map[string]interface{}, error) {
-	if webhookType != "fs" && webhookType != "dd" {
-		return nil, fmt.Errorf("invalid webhook type")
+// ProcessAlert 处理告警信息
+func (s *AlertService) ProcessAlert(notification *model.AlertMessage, webhookType, templateName, webhookURL, atSomeOne, split, bot string) ([]map[string]interface{}, error) {
+	// 1. 参数验证
+	if err := s.validateParams(webhookType, webhookURL); err != nil {
+		return nil, err
 	}
 
-	// 转告警级别为中文并设置消息颜色和状态
-	level := notification.ConvertLevelToInt()
-	color, status := s.getAlertColorAndStatus(*notification)
-
-	var alertTemplate *model.Template
-	var err error
-
-	if templateName == "" {
-		// 使用默认模板
-		defaultTemplate := defaultFeishuTemplate
-		if webhookType == "dd" {
-			defaultTemplate = defaultDingtalkTemplate
-		}
-		alertTemplate, err = model.NewTemplate(defaultTemplate)
-	} else {
-		// 使用文件模板
-		templateFile := filepath.Join("templates", templateName+".tmpl")
-		alertTemplate, err = model.NewTemplate(templateFile)
-	}
-
+	// 2. 获取模板
+	template, err := s.getTemplate(webhookType, templateName)
 	if err != nil {
 		return nil, fmt.Errorf("template loading failed: %v", err)
 	}
-	notification.SetTemplate(alertTemplate)
+	notification.SetTemplate(template)
 
-	// 解析  webhook URL
-	_, err = url.Parse(webhookURL)
+	// 3. 创建发送器
+	sender, err := s.createSender(webhookType, webhookURL, bot)
 	if err != nil {
-		return nil, fmt.Errorf("invalid webhook url parameter: %v", err)
+		return nil, err
 	}
 
-	var messageData []map[string]interface{}
+	// 4. 处理告警
+	if split == "true" {
+		return s.processSplitAlerts(notification, sender, atSomeOne)
+	}
+	return s.processGroupedAlert(notification, sender, atSomeOne)
+}
 
-	// 根据不同类型创建不同的发送器
-	var sender model.MessageSender
-	var platform string
+// validateParams 验证参数
+func (s *AlertService) validateParams(webhookType, webhookURL string) error {
+	if webhookType != "fs" && webhookType != "dd" {
+		return fmt.Errorf("invalid webhook type: %s", webhookType)
+	}
 
+	if _, err := url.Parse(webhookURL); err != nil {
+		return fmt.Errorf("invalid webhook URL: %v", err)
+	}
+
+	return nil
+}
+
+// getTemplate 获取模板
+func (s *AlertService) getTemplate(webhookType, templateName string) (*model.Template, error) {
+	if templateName == "" {
+		defaultTemplate := utils.DefaultFeishuTemplate
+		if webhookType == "dd" {
+			defaultTemplate = utils.DefaultDingtalkTemplate
+		}
+		return model.NewTemplate(defaultTemplate)
+	}
+
+	templateFile := filepath.Join("templates", templateName+".tmpl")
+	return model.NewTemplate(templateFile)
+}
+
+// createSender 创建发送器
+func (s *AlertService) createSender(webhookType, webhookURL, bot string) (model.MessageSender, error) {
 	switch webhookType {
 	case "fs":
-		platform = "feishu"
-		sender = &feishu.FeiShuSender{
+		return &feishu.FeiShuSender{
 			WebhookURL: webhookURL,
-		}
+		}, nil
 	case "dd":
-		platform = "dingtalk"
-		// 从 URL 中解析 secret
-		secret := ""
-		if u, err := url.Parse(webhookURL); err == nil {
-			secret = u.Query().Get("secret")
+		if !dingtalk.ValidateBot(bot) {
+			return nil, fmt.Errorf("invalid bot: %s", bot)
 		}
-		sender = &dingtalk.DingTalkSender{
+		return &dingtalk.DingTalkSender{
 			WebhookURL: webhookURL,
-			Secret:     secret,
-		}
+			Bot:        bot,
+		}, nil
+	default:
+		return nil, fmt.Errorf("unsupported webhook type: %s", webhookType)
 	}
+}
 
-	// 构建和发送消息
-	if split == "true" {
-		for _, alert := range notification.Alerts {
-			notification.Alerts = []model.Alert{alert}
-			notification.Status = alert.Status
-			color, status := s.getAlertColorAndStatus(*notification)
-			at := atSomeOne
-			if atInner, ok := alert.Annotations["at"]; ok {
-				at = atInner
-			}
-			_, err := s.sendAlertMessage(
-				level,
-				color,
-				status,
-				at,
-				notification.GroupLabels["alertname"],
-				notification,
-				alertTemplate,
-				sender,
-				platform,
-			)
-			if err != nil {
-				return nil, fmt.Errorf("message sending failed: %v", err)
-			}
-			messageData = append(messageData, map[string]interface{}{
-				"alert":     alert,
-				"status":    status,
-				"color":     color,
-				"atSomeone": at,
-			})
+// processSplitAlerts 处理分割的告警
+func (s *AlertService) processSplitAlerts(notification *model.AlertMessage, sender model.MessageSender, atSomeOne string) ([]map[string]interface{}, error) {
+	var messageData []map[string]interface{}
+
+	for _, alert := range notification.Alerts {
+		singleAlert := *notification
+		singleAlert.Alerts = []model.Alert{alert}
+		singleAlert.Status = alert.Status
+
+		color, status := s.getAlertColorAndStatus(singleAlert)
+		at := s.getAtSomeOne(atSomeOne, alert.Annotations)
+
+		if err := s.sendAlert(&singleAlert, sender, color, status, at); err != nil {
+			return nil, err
 		}
-	} else {
-		at := atSomeOne
-		if atInner, ok := notification.Alerts[0].Annotations["at"]; ok {
-			at = atInner
-		}
-		_, err := s.sendAlertMessage(
-			level,
-			color,
-			status,
-			at,
-			notification.GroupLabels["alertname"],
-			notification,
-			alertTemplate,
-			sender,
-			platform,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("message sending failed: %v", err)
-		}
+
 		messageData = append(messageData, map[string]interface{}{
-			"alerts":    notification.Alerts,
+			"alert":     alert,
 			"status":    status,
 			"color":     color,
-			"atSomeone": atSomeOne,
+			"atSomeone": at,
 		})
 	}
 
 	return messageData, nil
 }
 
-func (s *AlertService) sendAlertMessage(level, color, status, atSomeOne, title string, message interface{}, tmpl *model.Template, sender model.MessageSender, platform string) (string, error) {
-	messageContent, err := tmpl.Execute(message)
-	if err != nil {
-		return "", fmt.Errorf("template execution failed: %v", err)
+// processGroupedAlert 处理分组的告警
+func (s *AlertService) processGroupedAlert(notification *model.AlertMessage, sender model.MessageSender, atSomeOne string) ([]map[string]interface{}, error) {
+	color, status := s.getAlertColorAndStatus(*notification)
+	at := s.getAtSomeOne(atSomeOne, notification.Alerts[0].Annotations)
+
+	if err := s.sendAlert(notification, sender, color, status, at); err != nil {
+		return nil, err
 	}
 
-	commonMsg := &model.CommonMessage{
-		Platform:  platform,
-		Title:     title,
+	return []map[string]interface{}{
+		{
+			"alerts":    notification.Alerts,
+			"status":    status,
+			"color":     color,
+			"atSomeone": at,
+		},
+	}, nil
+}
+
+// sendAlert 发送告警
+func (s *AlertService) sendAlert(notification *model.AlertMessage, sender model.MessageSender, color, status, atSomeOne string) error {
+	level := notification.ConvertLevelToInt()
+
+	messageContent, err := notification.Template.Execute(notification)
+	if err != nil {
+		return fmt.Errorf("template execution failed: %v", err)
+	}
+
+	return sender.Send(&model.CommonMessage{
+		Platform:  sender.GetPlatform(),
+		Title:     notification.GroupLabels["alertname"],
 		Text:      messageContent,
 		Level:     level,
 		Color:     color,
 		Status:    status,
 		AtSomeOne: atSomeOne,
-	}
+	})
+}
 
-	if err := sender.Send(commonMsg); err != nil {
-		return "", fmt.Errorf("send message failed: %v", err)
+// getAtSomeOne 获取@人员
+func (s *AlertService) getAtSomeOne(defaultAt string, annotations map[string]string) string {
+	if at, ok := annotations["at"]; ok {
+		return at
 	}
-
-	return messageContent, nil
+	return defaultAt
 }
 
 func (s *AlertService) getAlertColorAndStatus(notification model.AlertMessage) (string, string) {
@@ -204,4 +184,3 @@ func (s *AlertService) getAlertColorAndStatus(notification model.AlertMessage) (
 		return "red", "故障"
 	}
 }
-
