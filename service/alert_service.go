@@ -14,14 +14,36 @@ import (
 	"github.com/tiamxu/kit/log"
 )
 
-type AlertService struct{}
+type AlertService struct {
+	alertRecordRepo *model.AlertRecordRepo
+}
 
 func NewAlertService() *AlertService {
-	return &AlertService{}
+	return &AlertService{
+		alertRecordRepo: model.NewAlertRecordRepo(),
+	}
 }
 
 // ProcessAlert 处理告警信息
 func (s *AlertService) ProcessAlert(notification *model.AlertMessage, webhookType, templateName, webhookURL, atSomeOne, split, bot string) ([]map[string]interface{}, error) {
+	// 保存告警记录到数据库
+	for _, alert := range notification.Alerts {
+		record := &model.AlertRecord{
+			Alertname:   alert.Labels["alertname"],
+			Level:       alert.Labels["severity"],
+			Status:      alert.Status,
+			Labels:      alert.Labels,
+			Annotations: alert.Annotations,
+			Instance:    alert.Labels["instance"],
+			StartsAt:    alert.StartsAt,
+			EndsAt:      alert.EndsAt,
+			Summary:     alert.Annotations["summary"],
+			Description: alert.Annotations["description"],
+		}
+		if err := s.alertRecordRepo.Create(record); err != nil {
+			log.Errorf("保存告警记录失败: %v", err)
+		}
+	}
 	// 1. 参数验证
 	if err := s.validateParams(webhookType, webhookURL); err != nil {
 		return nil, err

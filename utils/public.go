@@ -142,3 +142,8 @@ func IsValidURL(webhookURL string) bool {
 	}
 	return true
 }
+
+// 基于服务名和时间戳生成 alertID
+func GenerateAlertID(serviceName string) string {
+	return fmt.Sprintf("%s-%d", serviceName, time.Now().UnixNano())
+}

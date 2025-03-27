@@ -29,11 +29,3 @@ type CommonMessage struct {
 	HandledTime time.Time `json:"handled_time"` // 处理时间
 	IsEscalated bool      `json:"is_escalated"` // 是否已升级
 }
-
-// 告警状态常量
-const (
-	AlertStatusFiring    = "firing"    // 告警触发
-	AlertStatusHandling  = "handling"  // 处理中
-	AlertStatusResolved  = "resolved"  // 已解决
-	AlertStatusEscalated = "escalated" // 已升级
-)

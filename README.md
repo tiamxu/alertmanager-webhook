@@ -17,6 +17,7 @@ split: (Optional) 是否对分组告警进行拆分为单条 true:拆分,默认;
 fsurl/ddurl: (Required)告警webhook地址,飞书是fsurl, 钉钉是ddurl
 at: (Optional )支持at人，自定义机器人支持使用 open_id、user_id;钉钉使用手机号, 多个用逗号分隔;
     另外支持规则rule@人labels.annotations.at: "id1,id2"
+bot: 
 ```
 ## 支持功能
 - 支持飞书、钉钉告警

@@ -21,8 +21,8 @@ func init() {
 		log.Fatalf("Config initialization failed: %v", err)
 	}
 }
-func main() {
 
+func main() {
 	// 初始化 service 和 handler
 	alertService := service.NewAlertService()          // 创建 service 实例
 	alertHandler := api.NewAlertHandler(*alertService) // 创建 handler 实例
@@ -51,5 +51,4 @@ func main() {
 	log.Infoln("Shutting down server...")
 	httpkit.ShutdownServer(srv)
 	log.Infoln("Server exited")
-
 }

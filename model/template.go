@@ -38,7 +38,7 @@ var defaultFuncMap = template.FuncMap{
 		return s
 	},
 	"SplitString": func(pstring string, start int, stop int) string {
-		log.Infof("SplitString", pstring)
+		log.Infoln("SplitString", pstring)
 		if stop < 0 {
 			return pstring[start : len(pstring)+stop]
 		}
@@ -50,7 +50,6 @@ type Template struct {
 	Name string
 	tmpl *template.Template
 }
-
 
 // NewTemplate 创建新的模板，支持从文件或字符串创建
 func NewTemplate(source string) (*Template, error) {
@@ -183,4 +182,3 @@ func TimeFormat(timestr, format string) string {
 		return returnTime.Format(format)
 	}
 }
-

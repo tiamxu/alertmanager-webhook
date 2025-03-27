@@ -47,6 +47,7 @@ func (c *Config) Initial() (err error) {
 			log.Printf("config initialed, env: %s", cfg.Env)
 		}
 	}()
+
 	//日志
 	// if level, err := logrus.ParseLevel(c.LogLevel); err != nil {
 	// 	return err
@@ -75,6 +76,7 @@ func (c *Config) Initial() (err error) {
 		return fmt.Errorf("database initialization failed: %w", err)
 
 	}
+
 	return nil
 }
 func loadConfig() error {

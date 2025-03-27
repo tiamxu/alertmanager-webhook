@@ -73,13 +73,13 @@ func (n *AlertMessage) ConvertLevelToInt() string {
 type Alerts []Alert
 
 // 定义告警级别的优先级映射
-var levelPriority = map[string]int{
-	"信息":   0,
-	"警告":   1,
-	"一般严重": 2,
-	"严重":   3,
-	"灾难":   4,
-}
+// var levelPriority = map[string]int{
+// 	"信息":   0,
+// 	"警告":   1,
+// 	"一般严重": 2,
+// 	"严重":   3,
+// 	"灾难":   4,
+// }
 
 // 获取告警级别的优先级值，默认返回最小优先级
 func getLevelPriority(alert Alert) int {
