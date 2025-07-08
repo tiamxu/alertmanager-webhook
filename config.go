@@ -80,6 +80,19 @@ func (c *Config) Initial() (err error) {
 	return nil
 }
 func loadConfig() error {
+	env := "dev"
+
+	switch env {
+	case "dev":
+		configPath = "config/config-dev.yaml"
+	case "test":
+		configPath = "config/config-test.yaml"
+	case "prod":
+		configPath = "config/config-prod.yaml"
+	default:
+		configPath = "config/config.yaml"
+	}
+
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return err
