@@ -7,7 +7,7 @@ go build -o main
 ```
 http://localhost:8801/webhook?type=fs&tpl=feishu&fsurl=https://open.feishu.cn/open-apis/bot/v2/hook/bf8bb912-bc2e-40ad-9533-fcb8068aa621&at=ou_1199d79525e146bad9d0a5a46a86a10f
 
-http://localhost:8801/webhook?type=dd&tpl=dingtalk&ddurl=https://oapi.dingtalk.com/robot/send?access_token=9ef3af0bc7052966a73c6642eed0e7c90e35a4dd6860887dd9029c65255d5abd&split=true&at=1888888888
+http://localhost:8801/webhook?type=dd&tpl=dingtalk&ddurl=https://oapi.dingtalk.com/robot/send?access_token=9ef3af0bc7052966a73c6642eed0e7c90e35a4dd6860887dd9029c65255d5abd&bot=bot1&split=false&at=1888888888
 ```
 ## 参数说明
 ```
@@ -17,7 +17,7 @@ split: (Optional) 是否对分组告警进行拆分为单条 true:拆分,默认;
 fsurl/ddurl: (Required)告警webhook地址,飞书是fsurl, 钉钉是ddurl
 at: (Optional )支持at人，自定义机器人支持使用 open_id、user_id;钉钉使用手机号, 多个用逗号分隔;
     另外支持规则rule@人labels.annotations.at: "id1,id2"
-bot: 
+bot: 钉钉机器人secret
 ```
 ## 支持功能
 - 支持飞书、钉钉告警

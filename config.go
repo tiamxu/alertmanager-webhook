@@ -83,7 +83,7 @@ func loadConfig() error {
 	env := "dev"
 
 	switch env {
-	case "dev":
+	case "local":
 		configPath = "config/config-dev.yaml"
 	case "test":
 		configPath = "config/config-test.yaml"
