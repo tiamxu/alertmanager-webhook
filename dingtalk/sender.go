@@ -19,8 +19,10 @@ import (
 
 // 定义钉钉机器人secret
 var botsSecret = map[string]string{
-	"bot1": "SEC0488bbb01d1bdb222619fce742061687a1e591d5a914923781495bde1128c8bf",
-	"bot2": "",
+	"bot1": "SEC0488bbb01d1bdb222619fce742061687a1e591d5a914923781495bde1128c8bf", //告警测试
+	"bot2": "SEC1e1a88a4bc931f80e37d987fc926f234cbbd8c907b53291e87d16196bf8df351", //监控告警群
+	"bot3": "SEC65ae92480f7a87115281be137e1d290856aeca42ab20d619487289dbce04f4f5", //沃奇kubernetes
+	"bot5": "SECa8f403aee6dd3dcaa90e53fdd7dedc05638a1d54c224bac88214ee0c66135924",
 }
 
 type DingTalkSender struct {
