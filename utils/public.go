@@ -7,30 +7,6 @@ import (
 	"time"
 )
 
-// 添加默认模板常量
-const (
-	DefaultFeishuTemplate = `{{ $var := .ExternalURL}}{{ range $k, $v := .Alerts }}{{if eq $v.Status "resolved"}}
-> {{GetCSTtime $v.StartsAt}}|{{GetCSTtime $v.EndsAt}}|{{$v.Annotations.recovery_description}}
-{{ else }}
-> {{GetCSTtime $v.StartsAt}}|{{$v.Annotations.description}}
-{{ end }}
-{{- end }}`
-
-	DefaultDingtalkTemplate = `{{ $var := .ExternalURL}}{{ range $k,$v:=.Alerts }}
-{{ if eq $v.Status "resolved" }}
-##### <font color="green">触发时间</font>: {{GetCSTtime $v.StartsAt}}
-##### <font color="green">结束时间</font>: {{GetCSTtime $v.EndsAt}}
-##### <font color="green">告警信息</font>: {{$v.Annotations.recovery_description}}
----  
-{{ else }}
-
-##### <font color="red">触发时间</font>: {{GetCSTtime $v.StartsAt}}
-##### <font color="red">告警信息</font>: {{$v.Annotations.recovery_description}}
----  
-{{ end }}
-{{- end }}`
-)
-
 // 转换时间戳到时间字符串
 func GetTime(timeStr interface{}, timeFormat ...string) string {
 	var R_Time string

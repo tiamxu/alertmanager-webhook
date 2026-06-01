@@ -21,13 +21,26 @@ alert_type: "feishu" #platform "dingtalk","feishu"
 #---------------------↓webhook-----------------------
 open_dingding: 1 # 0 for off, 1 for on
 dingding:
+  dd_url: https://oapi.dingtalk.com/robot/send?access_token=xxxxx
   bots:
-    - name: "bot1"
-      webhook_url: https://oapi.dingtalk.com/robot/send?access_token=xxxxx
-      secret: "xxx"
+    bot1:
+      secret: "SEC0488bbb01d1bdb222619fce742061687a1e591d5a914923781495bde1128c8bf"
+    bot2:
+      secret: "SEC1e1a88a4bc931f80e37d987fc926f234cbbd8c907b53291e87d16196bf8df351"
+    bot3:
+      secret: "SEC65ae92480f7a87115281be137e1d290856aeca42ab20d619487289dbce04f4f5"
+    bot5:
+       secret: "SECa8f403aee6dd3dcaa90e53fdd7dedc05638a1d54c224bac88214ee0c66135924"
 #是否开启飞书告警通道,可同时开始多个通道0为关闭,1为开启
 open_feishu: 1
 feishu:
   msg_type: post
   fs_url: https://open.feishu.cn/open-apis/bot/v2/hook/bf8bb912-bc2e-40ad-9533-fcb8068aa621
 
+
+
+
+      # 28 -    "bot1": "SEC0488bbb01d1bdb222619fce742061687a1e591d5a914923781495bde1128c8bf",
+      # 29 -    "bot2": "SEC1e1a88a4bc931f80e37d987fc926f234cbbd8c907b53291e87d16196bf8df351",
+      # 30 -    "bot3": "SEC65ae92480f7a87115281be137e1d290856aeca42ab20d619487289dbce04f4f5",
+      # 31 -    "bot5": "SECa8f403aee6dd3dcaa90e53fdd7dedc05638a1d54c224bac88214ee0c66135924",

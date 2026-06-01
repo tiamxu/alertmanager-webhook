@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/tiamxu/alertmanager-webhook/api"
@@ -33,11 +34,11 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"message": "pong"})
 	})
 
+	// 添加超时控制中间件
+	router.Use(httpkit.TimeoutMiddleware(30 * time.Second))
+
 	// 使用 handler 的方法替代直接调用
 	router.POST("/webhook", alertHandler.PrometheusAlert)
-
-	router.POST("/users/get_id", api.GetUserIDsByAttributes)
-	router.GET("/get_user_ids", api.GetUserIDsByDepartment)
 
 	// 启动服务器
 	srv := httpkit.StartServer(router, cfg.HttpSrv)

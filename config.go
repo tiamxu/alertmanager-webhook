@@ -23,7 +23,12 @@ type Config struct {
 }
 
 type DingtalkConfig struct {
-	WebhookURL string `yaml:"dd_url"`
+	WebhookURL string          `yaml:"dd_url"`
+	Bots       map[string]BotConfig `yaml:"bots"`
+}
+
+type BotConfig struct {
+	Secret string `yaml:"secret"`
 }
 
 type FeishuConfig struct {
