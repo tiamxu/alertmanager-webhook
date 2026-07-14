@@ -21,9 +21,9 @@ alert_type: "feishu" #platform "dingtalk","feishu"
 #---------------------↓webhook-----------------------
 open_dingding: 1 # 0 for off, 1 for on
 dingding:
+  dd_url: https://oapi.dingtalk.com/robot/send?access_token=xxxxx
   bots:
-    - name: "bot1"
-      webhook_url: https://oapi.dingtalk.com/robot/send?access_token=xxxxx
+    bot1:
       secret: "xxx"
 #是否开启飞书告警通道,可同时开始多个通道0为关闭,1为开启
 open_feishu: 1

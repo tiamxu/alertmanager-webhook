@@ -13,11 +13,11 @@ http://localhost:8801/webhook?type=dd&tpl=dingtalk&ddurl=https://oapi.dingtalk.c
 ```
 type: (Required)类型 飞书:fs ,钉钉:dd
 tpl: (Optional)模版名 ./template目录下,名字为模版名。 非必须，可不提供
-split: (Optional) 是否对分组告警进行拆分为单条 true:拆分,默认; false：不拆分
+split: (Optional) 是否对分组告警进行拆分为单条 true:拆分; false或不传：不拆分，按分组发送，默认不拆分
 fsurl/ddurl: (Required)告警webhook地址,飞书是fsurl, 钉钉是ddurl
 at: (Optional )支持at人，自定义机器人支持使用 open_id、user_id;钉钉使用手机号, 多个用逗号分隔;
     另外支持规则rule@人labels.annotations.at: "id1,id2"
-bot: 钉钉机器人secret
+bot: 钉钉机器人名称，必须已配置在config/config.yaml的dingding.bots中
 ```
 ## 支持功能
 - 支持飞书、钉钉告警

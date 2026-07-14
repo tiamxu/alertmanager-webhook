@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/tiamxu/alertmanager-webhook/api"
+	"github.com/tiamxu/alertmanager-webhook/pkg/sender/dingtalk"
 	"github.com/tiamxu/alertmanager-webhook/service"
 	httpkit "github.com/tiamxu/kit/http"
 	"github.com/tiamxu/kit/log"
@@ -21,6 +22,17 @@ func init() {
 	if err := cfg.Initial(); err != nil {
 		log.Fatalf("Config initialization failed: %v", err)
 	}
+	initDingtalkBots()
+}
+
+func initDingtalkBots() {
+	bots := make(map[string]dingtalk.BotConfig, len(cfg.Dingtalk.Bots))
+	for name, bot := range cfg.Dingtalk.Bots {
+		bots[name] = dingtalk.BotConfig{
+			Secret: bot.Secret,
+		}
+	}
+	dingtalk.SetBotsConfig(bots)
 }
 
 func main() {

@@ -17,13 +17,13 @@ type Config struct {
 	AlertType    string                  `yaml:"alert_type"`
 	OpenDingding int                     `yaml:"open_dingding"`
 	OpenFeishu   int                     `yaml:"open_feishu"`
-	Dingtalk     DingtalkConfig          `yaml:"dingtalk"`
+	Dingtalk     DingtalkConfig          `yaml:"dingding"`
 	Feishu       FeishuConfig            `yaml:"feishu"`
 	Templates    []TemplateConfig        `yaml:"templates"`
 }
 
 type DingtalkConfig struct {
-	WebhookURL string          `yaml:"dd_url"`
+	WebhookURL string               `yaml:"dd_url"`
 	Bots       map[string]BotConfig `yaml:"bots"`
 }
 

@@ -163,6 +163,15 @@ func (d *DingTalkSender) sendRequest(webhookURL string, msg interface{}) error {
 		}).Error("读取响应失败")
 		return err
 	}
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		log.WithFields(log.Fields{
+			"module":   "dingtalk",
+			"action":   "send",
+			"status":   resp.StatusCode,
+			"response": string(body),
+		}).Error("消息发送失败")
+		return fmt.Errorf("dingtalk webhook returned non-2xx status: %d, response: %s", resp.StatusCode, string(body))
+	}
 
 	log.WithFields(log.Fields{
 		"module":   "dingtalk",

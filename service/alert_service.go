@@ -23,6 +23,12 @@ func NewAlertService() *AlertService {
 func (s *AlertService) ProcessAlert(notification *model.AlertMessage, webhookType, templateName, webhookURL, atSomeOne, split, bot string) ([]map[string]interface{}, error) {
 
 	// 1. 参数验证
+	if notification == nil {
+		return nil, fmt.Errorf("notification is nil")
+	}
+	if len(notification.Alerts) == 0 {
+		return nil, fmt.Errorf("alerts is empty")
+	}
 	if err := s.validateParams(webhookType, webhookURL); err != nil {
 		return nil, err
 	}
@@ -81,10 +87,10 @@ func (s *AlertService) createSender(webhookType, webhookURL, bot string) (sender
 // processSplitAlerts 处理分割的告警（并发发送）
 func (s *AlertService) processSplitAlerts(notification *model.AlertMessage, alertSender sender.MessageSender, atSomeOne string) ([]map[string]interface{}, error) {
 	var (
-		wg         sync.WaitGroup
+		wg          sync.WaitGroup
 		messageData []map[string]interface{}
-		mu         sync.Mutex
-		errChan    = make(chan error, len(notification.Alerts))
+		mu          sync.Mutex
+		errChan     = make(chan error, len(notification.Alerts))
 	)
 
 	for _, alert := range notification.Alerts {
@@ -154,10 +160,10 @@ func (s *AlertService) sendAlert(notification *model.AlertMessage, alertSender s
 	messageContent, err := notification.Template.Execute(notification)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"module":   "alert_service",
-			"action":   "send_alert",
+			"module":    "alert_service",
+			"action":    "send_alert",
 			"alertname": notification.GroupLabels["alertname"],
-			"error":    err.Error(),
+			"error":     err.Error(),
 		}).Error("模板渲染失败")
 		return fmt.Errorf("template execution failed: %v", err)
 	}
